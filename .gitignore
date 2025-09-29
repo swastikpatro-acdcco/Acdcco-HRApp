@@ -6,6 +6,8 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+.AppleDouble
+.LSOverride
 
 # Editor/IDE files
 .history/
@@ -22,6 +24,9 @@ __pycache__/
 venv/
 env/
 .env
+*.egg-info/
+dist/
+build/
 
 # Django
 *.log
@@ -34,3 +39,19 @@ db.sqlite3-journal
 company_portal/__pycache__/
 hr/__pycache__/
 people/__pycache__/
+
+# Migration files 
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Static files collected by Django
+staticfiles/
+static_root/
+
+# Pytest
+.pytest_cache/
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local

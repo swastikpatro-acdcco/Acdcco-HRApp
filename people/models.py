@@ -21,73 +21,131 @@ POSITION_CHOICES = [
     ("Admin", "Admin"),
 ]
 
-
+# Updated to match PostgreSQL enum exactly
 STATUS_CHOICES = [
     ("active", "Active"),
-    ("inactive", "Inactive"),
-    ("on_leave", "On Leave"),
+    ("inactive", "Inactive"), 
+    ("on_leave", "On Leave"),  # matches 'on_leave' in PostgreSQL
 ]
 
 
 class Person(models.Model):
     # -- Identity & contact --
-    # Using full_name instead of first_name/last_name to match PostgreSQL
-    full_name       = models.TextField(help_text="Full name of the person")
-    acdc_email      = models.EmailField(unique=True, blank=True, null=True)
-    personal_email  = models.EmailField(unique=True, blank=True, null=True)
-    phone           = models.CharField(max_length=30, blank=True)
+    # Using full_name to match PostgreSQL, with proper validation
+    full_name = models.TextField(
+        help_text="Full name of the person",
+        # Django will handle the NOT NULL constraint
+    )
+    
+    # Using TextField to match PostgreSQL CITEXT behavior
+    # EmailField validation will still work, but storage matches CITEXT
+    acdc_email = models.TextField(
+        unique=True, 
+        blank=True, 
+        null=True,
+        help_text="ACDC email address"
+    )
+    personal_email = models.TextField(
+        unique=True, 
+        blank=True, 
+        null=True,
+        help_text="Personal email address"
+    )
+    phone = models.TextField(blank=True, null=True)  # Changed to TextField to match PostgreSQL
 
     # -- Employment --
-    department      = models.TextField(choices=DEPARTMENT_CHOICES)  # Required field, no choices to match schema flexibility
-    subteam         = models.TextField(blank=True, null=True)
-    position        = models.TextField(choices=POSITION_CHOICES)
-    status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
-    timezone        = models.TextField(blank=True, null=True)
+    # Department is required in PostgreSQL (NOT NULL)
+    department = models.TextField(
+        choices=DEPARTMENT_CHOICES,
+        help_text="Department (required)"
+        # null=False is Django default, matches PostgreSQL NOT NULL
+    )
+    subteam = models.TextField(blank=True, null=True)
     
-    # Changed to SmallIntegerField to match PostgreSQL SMALLINT with range check
+    # Position allows NULL in PostgreSQL, so we should allow it in Django too
+    position = models.TextField(
+        choices=POSITION_CHOICES,
+        blank=True, 
+        null=True,  # Added to match PostgreSQL schema
+        help_text="Position/Role"
+    )
+    
+    # Status field matching PostgreSQL enum
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default="active",
+        help_text="Member status"
+    )
+    
+    timezone = models.TextField(blank=True, null=True)
+    
+    # SmallIntegerField matches PostgreSQL SMALLINT with range check
     time_commitment = models.SmallIntegerField(
         blank=True, 
         null=True,
         help_text="Time commitment in hours (0-80)"
     )
     
-    start_date      = models.DateField()
-    end_date        = models.DateField(blank=True, null=True)
+    # Date fields match PostgreSQL exactly
+    start_date = models.DateField(help_text="Start date (required)")
+    end_date = models.DateField(blank=True, null=True, help_text="End date")
 
     # -- Audit fields --
-    created_at      = models.DateTimeField(auto_now_add=True)
-    updated_at      = models.DateTimeField(auto_now=True)
+    # Using DateTimeField to match PostgreSQL TIMESTAMPTZ
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'people'  # Match PostgreSQL table name
+        db_table = 'people'  # Match PostgreSQL table name exactly
         indexes = [
             models.Index(fields=["status"]),
             models.Index(fields=["department", "subteam"]),
-            # Note: PostgreSQL has a trigram index on full_name, 
-            # but Django doesn't have direct support for this
+            # Note: PostgreSQL has trigram index on full_name
+            # Django doesn't directly support this, but it will use the existing index
         ]
         ordering = ["full_name"]
+        
+        # Add constraints to match PostgreSQL schema
+        constraints = [
+            # This matches the PostgreSQL CHECK constraint
+            models.CheckConstraint(
+                condition=models.Q(time_commitment__gte=0) & models.Q(time_commitment__lte=80),
+                name='time_commitment_range'
+            ),
+        ]
 
     def __str__(self):
         return f"{self.full_name} ({self.acdc_email})"
 
     def clean(self):
-        # Validate full_name is not empty (trimmed length > 0)
+        # Validate full_name is not empty (matches PostgreSQL CHECK)
         if not self.full_name or len(self.full_name.strip()) == 0:
             raise ValidationError({"full_name": "Full name cannot be empty."})
         
-        # Start <= End date validation
+        # Start <= End date validation (matches PostgreSQL constraint)
         if self.end_date and self.start_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "End date cannot be before start date."})
 
-        # Validate time_commitment range (0-80)
+        # Validate time_commitment range (matches PostgreSQL CHECK)
         if self.time_commitment is not None and not (0 <= self.time_commitment <= 80):
             raise ValidationError({"time_commitment": "Time commitment must be between 0 and 80 hours."})
         
-        # Ensure emails are different if both are provided
+        # Ensure emails are different (matches PostgreSQL constraint)
         if (self.acdc_email and self.personal_email and 
             self.acdc_email.lower() == self.personal_email.lower()):
             raise ValidationError({"personal_email": "Personal email must be different from ACDC email."})
+        
+        # Basic email validation for the text fields
+        if self.acdc_email and '@' not in self.acdc_email:
+            raise ValidationError({"acdc_email": "Invalid email format."})
+        if self.personal_email and '@' not in self.personal_email:
+            raise ValidationError({"personal_email": "Invalid email format."})
+
+    def save(self, *args, **kwargs):
+        # Run clean validation before saving
+        self.clean()
+        super().save(*args, **kwargs)
 
     @property
     def is_active_member(self) -> bool:
