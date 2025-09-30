@@ -105,3 +105,76 @@ class PersonViewSet(viewsets.ModelViewSet):
                 {"message": f"Employee {deleted_name} ({deleted_email}) deleted successfully"},
                 status=status.HTTP_200_OK
             )
+        
+
+    @action(detail=False, methods=['patch'])
+    def update_by_identifier(self, request):
+        """
+        Update a person by their ACDC email OR full name
+        PATCH /api/employees/update_by_identifier/?email=john.doe@acdc.com
+        PATCH /api/employees/update_by_identifier/?full_name=John Doe
+        Body: {"department": "Sales", "status": "on_leave"}
+        """
+        email = request.query_params.get('email')
+        full_name = request.query_params.get('full_name')
+        
+        if not email and not full_name:
+            return Response(
+                {"error": "Either email or full_name parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prefer email if both provided
+        if email:
+            person = get_object_or_404(Person, acdc_email__iexact=email)
+            
+            serializer = self.get_serializer(person, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "message": f"Employee {email} updated successfully",
+                    "updated_data": serializer.data
+                })
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update by full name
+        if full_name:
+            matching_people = Person.objects.filter(full_name__iexact=full_name)
+            
+            if matching_people.count() == 0:
+                return Response(
+                    {"error": f"No employee found with name '{full_name}'"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            if matching_people.count() > 1:
+                matches = [
+                    {
+                        "full_name": p.full_name,
+                        "email": p.acdc_email,
+                        "department": p.department,
+                        "position": p.position
+                    }
+                    for p in matching_people
+                ]
+                return Response(
+                    {
+                        "error": f"Multiple employees found with name '{full_name}'. Please use email instead.",
+                        "matches": matches
+                    },
+                    status=status.HTTP_409_CONFLICT
+                )
+            
+            person = matching_people.first()
+            serializer = self.get_serializer(person, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "message": f"Employee {full_name} updated successfully",
+                    "updated_data": serializer.data
+                })
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
