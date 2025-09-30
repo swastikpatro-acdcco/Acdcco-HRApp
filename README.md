@@ -4,10 +4,10 @@ A Django-based HR management application using PostgreSQL for managing employee 
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
-- [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
+- [API Testing](#api-testing)
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -271,6 +271,52 @@ for p in people:
     print(f"{p.full_name} - {p.department}")
 
 exit()
+```
+
+## API Testing
+
+The application provides REST API endpoints for managing employee data.
+
+### Prerequisites
+- Ensure the development server is running:
+```bash
+  python manage.py runserver
+```
+## Available Endpoints
+
+### 1. List All Employees
+
+```bash
+GET http://127.0.0.1:8000/api/employees/
+```
+
+### 2. Filter Employees
+
+Filter by department:
+```bash
+GET http://127.0.0.1:8000/api/employees/filter_employees/?department=Engineering
+```
+
+Filter by status:
+```bash
+GET http://127.0.0.1:8000/api/employees/filter_employees/?status=active
+```
+
+Filter by both:
+```bash
+GET http://127.0.0.1:8000/api/employees/filter_employees/?department=Engineering&status=active
+```
+
+### 3. Delete Employee
+
+Delete by email (recommended):
+```bash
+DELETE http://127.0.0.1:8000/api/employees/delete_by_identifier/?email=john.doe@acdcco.org
+```
+
+Delete by full name:
+```bash
+DELETE http://127.0.0.1:8000/api/employees/delete_by_identifier/?full_name=John Doe
 ```
 
 ## Troubleshooting
