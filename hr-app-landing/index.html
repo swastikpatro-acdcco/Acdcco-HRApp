@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACDC HR Management System</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            padding: 15px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #6366f1;
+            text-decoration: none;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #374151;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            padding: 10px 20px;
+            border-radius: 12px;
+            position: relative;
+        }
+        .nav-link:hover {
+            color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+        /* Mobile Menu Toggle */
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+        }
+        .nav-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #6366f1;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        /* Hero Section */
+        .hero {
+            padding: 140px 0 60px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+            z-index: 0;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            line-height: 1.1;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        /* Section Styles */
+        .section {
+            padding: 80px 0;
+            position: relative;
+        }
+        .section-title {
+            text-align: center;
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 50px;
+            color: #1f2937;
+        }
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: -30px auto 50px;
+            line-height: 1.6;
+        }
+        /* Employee Directory Section */
+        .employee-directory {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            margin: 0 20px;
+            border-radius: 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .employees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .employee-card {
+            background: #ffffff;
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(99, 102, 241, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .employee-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .employee-card:hover::before {
+            transform: scaleX(1);
+        }
+        .employee-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+        .employee-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .employee-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .employee-title {
+            font-size: 1rem;
+            color: #6366f1;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .employee-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        .employee-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+        .detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .detail-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .location-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-employee {
+            background: #10b981;
+            color: white;
+        }
+        .status-leave {
+            background: #f59e0b;
+            color: white;
+        }
+        /* Employee Form Section */
+        .employee-form {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            margin: 60px 20px 0;
+            border-radius: 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .form-input, .form-select, .form-textarea {
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .form-submit {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+        .form-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+        .form-submit:active {
+            transform: translateY(0);
+        }
+        /* Success Message */
+        .success-message {
+            display: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .success-message.show {
+            display: block;
+            animation: slideDown 0.5s ease;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Contact Section */
+        .contact {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            margin: 0 20px;
+            border-radius: 30px;
+            box-shadow: 0 25px 80px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .contact::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.1"/><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="80" cy="30" r="1.5" fill="%23ffffff" opacity="0.1"/><circle cx="30" cy="80" r="1" fill="%23ffffff" opacity="0.1"/></svg>');
+            z-index: 0;
+        }
+        .contact .container {
+            position: relative;
+            z-index: 1;
+        }
+        .contact .section-title {
+            color: white;
+        }
+        .contact .section-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+        .contact-item {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .contact-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .contact-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        .contact-item h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .contact-item p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            margin: 60px 20px 0;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+            z-index: 0;
+        }
+        .footer-content {
+            position: relative;
+            z-index: 1;
+        }
+        .footer h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: #a855f7;
+        }
+        .footer p {
+            opacity: 0.8;
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+        .footer-bottom {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.6;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                border-radius: 0 0 20px 20px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            }
+            .nav-menu.active {
+                display: flex;
+            }
+            .nav-toggle {
+                display: flex;
+            }
+            .hero {
+                padding: 120px 0 60px;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+            .employee-directory, .contact, .employee-form {
+                margin: 0 10px;
+                padding: 60px 20px;
+            }
+            .employees-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .contact-info {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .section-title {
+                font-size: 2.5rem;
+            }
+        }
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .employee-card, .contact-item {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        /* Loading Animation */
+        .hero-content {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">ACDC HR</a>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Dashboard</a></li>
+                <li><a href="#employees" class="nav-link">Employees</a></li>
+                <li><a href="#add-employee" class="nav-link">Add Employee</a></li>
+                <li><a href="#contact" class="nav-link">Support</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>ACDC HR Management</h1>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Add New Employee
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-users"></i>
+                        View All Employees
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Employee Directory Section -->
+    <section id="employees" class="section employee-directory">
+        <div class="container">
+            <h2 class="section-title">Employee Directory</h2>
+            <p class="section-subtitle">Current team members and their information</p>
+            
+            <div class="employees-grid" id="employeesContainer">
+                <!-- Employee cards will be generated here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Employee Form Section -->
+    <section id="add-employee" class="section employee-form">
+        <div class="container">
+            <h2 class="section-title">Add New Employee</h2>
+            <p class="section-subtitle">Register a new team member to the ACDC HR system</p>
+            
+            <div class="form-container">
+                <form id="employeeForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName" class="form-label">First Name *</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName" class="form-label">Last Name *</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <input type="email" id="email" name="email" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="employeeId" class="form-label">Employee ID *</label>
+                            <input type="text" id="employeeId" name="employeeId" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="startDate" class="form-label">Start Date *</label>
+                            <input type="date" id="startDate" name="startDate" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="department" class="form-label">Department *</label>
+                            <select id="department" name="department" class="form-select" required>
+                                <option value="">Select Department</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Product Management">Product Management</option>
+                                <option value="Design">Design</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Executive">Executive</option>
+                                <option value="HR">Human Resources</option>
+                                <option value="Finance">Finance</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="position" class="form-label">Position/Title *</label>
+                            <input type="text" id="position" name="position" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="role" class="form-label">Role Level *</label>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="">Select Role</option>
+                                <option value="Member">Member</option>
+                                <option value="Director">Director</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="location" class="form-label">Work Location *</label>
+                            <select id="location" name="location" class="form-select" required>
+                                <option value="">Select Location</option>
+                                <option value="New York City">New York City</option>
+                                <option value="San Francisco">San Francisco</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Boston">Boston</option>
+                                <option value="Chicago">Chicago</option>
+                                <option value="Austin">Austin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reportsTo" class="form-label">Reports To</label>
+                            <input type="text" id="reportsTo" name="reportsTo" class="form-input" placeholder="Manager/Supervisor Name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="salary" class="form-label">Annual Salary</label>
+                            <input type="number" id="salary" name="salary" class="form-input" placeholder="Enter annual salary">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="skills" class="form-label">Skills & Technologies</label>
+                            <input type="text" id="skills" name="skills" class="form-input" placeholder="React, Python, Django, etc. (comma separated)">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="bio" class="form-label">Bio/Description</label>
+                            <textarea id="bio" name="bio" class="form-textarea" placeholder="Brief description about the employee..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="form-submit">
+                        <i class="fas fa-user-plus"></i>
+                        Add Employee
+                    </button>
+                    
+                    <div id="successMessage" class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        Employee has been successfully added to the system!
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section contact">
+        <div class="container">
+            <h2 class="section-title">IT Support</h2>
+            <p class="section-subtitle">Need help with the HR system? Contact our IT support team</p>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h4>Email Support</h4>
+                    <p>it-support@acdc.com<br>hr-help@acdc.com</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h4>Phone Support</h4>
+                    <p>Ext: 1234<br>Mon-Fri 9AM-5PM</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h4>Support Tickets</h4>
+                    <p>Create a ticket<br>help.acdc.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <h3>ACDC HR System</h3>
+                <p>Internal HR management system for ACDC BTS team.</p>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 ACDC BTS Team. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample employee data
+        const employees = [
+            {name: 'Brooke Khan', location: 'New York City', title: 'VP of Sales', status: 'On leave', startDate: '2015-01-13', department: 'Sales', reportsTo: 'Pat Everett'},
+            {name: 'Sandy Hagen', location: 'New York City', title: 'Product Designer', status: 'Employee', startDate: '2018-02-01', department: 'Design', reportsTo: 'Jamie Ziya'},
+            {name: 'Jamie Ziya', location: 'New York City', title: 'VP of Product', status: 'Employee', startDate: '2013-05-30', department: 'Product Management', reportsTo: 'Pat Everett'},
+            {name: 'Pat Everett', location: 'New York City', title: 'CEO', status: 'Employee', startDate: '2014-08-24', department: 'Executive', reportsTo: ''},
+            {name: 'Kai Siyavong', location: 'New York City', title: 'PMM', status: 'Employee', startDate: '2017-02-15', department: 'Product Marketing', reportsTo: 'Jamie Ziya'},
+            {name: 'Robby Pritchett', location: 'San Francisco', title: 'VP of Engineering', status: 'Employee', startDate: '2016-01-23', department: 'Engineering', reportsTo: 'Pat Everett'},
+            {name: 'Dany Coronado', location: 'San Francisco', title: 'Software Engineer', status: 'Employee', startDate: '2010-01-11', department: 'Engineering', reportsTo: 'Robby Pritchett'},
+            {name: 'River Oe', location: 'San Francisco', title: 'Product Manager', status: 'Employee', startDate: '2011-12-30', department: 'Product Management', reportsTo: 'Jamie Ziya'}
+        ];
+
+        // Function to get initials from name
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Function to render employee cards
+        function renderEmployees() {
+            const container = document.getElementById('employeesContainer');
+            container.innerHTML = '';
+
+            employees.forEach(employee => {
+                const statusClass = employee.status === 'Employee' ? 'status-employee' : 'status-leave';
+                const locationClass = employee.location === 'New York City' ? 'style="background: #ef4444;"' : '';
+                
+                const card = document.createElement('div');
+                card.className = 'employee-card';
+                card.innerHTML = `
+                    <div class="employee-avatar">${getInitials(employee.name)}</div>
+                    <div class="employee-name">${employee.name}</div>
+                    <div class="employee-title">${employee.title}</div>
+                    <div class="employee-details">
+                        <div class="employee-detail">
+                            <span class="detail-label">Location:</span>
+                            <span class="location-badge" ${locationClass}>${employee.location}</span>
+                        </div>
+                        <div class="employee-detail">
+                            <span class="detail-label">Status:</span>
+                            <span class="status-badge ${statusClass}">${employee.status}</span>
+                        </div>
+                        <div class="employee-detail">
+                            <span class="detail-label">Start Date:</span>
+                            <span class="detail-value">${formatDate(employee.startDate)}</span>
+                        </div>
+                        <div class="employee-detail">
+                            <span class="detail-label">Department:</span>
+                            <span class="detail-value">${employee.department}</span>
+                        </div>
+                        ${employee.reportsTo ? `
+                        <div class="employee-detail">
+                            <span class="detail-label">Reports To:</span>
+                            <span class="detail-value">${employee.reportsTo}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Mobile Navigation Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render employees on page load
+            renderEmployees();
+
+            const navToggle = document.querySelector('.nav-toggle');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                });
+            }
+
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                });
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        const offsetTop = target.offsetTop - 80;
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', () => {
+                const navbar = document.querySelector('.navbar');
+                if (window.scrollY > 50) {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+                } else {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+                }
+            });
+
+            // Button click handlers
+            document.querySelector('.btn-primary').addEventListener('click', () => {
+                document.querySelector('#add-employee').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+
+            document.querySelector('.btn-secondary').addEventListener('click', () => {
+                document.querySelector('#employees').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+
+            // Employee Form Handling
+            const employeeForm = document.getElementById('employeeForm');
+            const successMessage = document.getElementById('successMessage');
+
+            employeeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const formData = new FormData(employeeForm);
+                const employeeData = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    employeeData[key] = value;
+                }
+                
+                // Add new employee to the list
+                const newEmployee = {
+                    name: `${employeeData.firstName} ${employeeData.lastName}`,
+                    location: employeeData.location,
+                    title: employeeData.position,
+                    status: 'Employee',
+                    startDate: employeeData.startDate,
+                    department: employeeData.department,
+                    reportsTo: employeeData.reportsTo || ''
+                };
+                
+                employees.push(newEmployee);
+                renderEmployees();
+                
+                console.log('Employee Data:', employeeData);
+                
+                // Show success message
+                successMessage.classList.add('show');
+                
+                // Reset form
+                employeeForm.reset();
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                }, 5000);
+            });
+
+            // Auto-generate Employee ID based on name and department
+            const firstNameField = document.getElementById('firstName');
+            const lastNameField = document.getElementById('lastName');
+            const departmentField = document.getElementById('department');
+            const employeeIdField = document.getElementById('employeeId');
+
+            function generateEmployeeId() {
+                const firstName = firstNameField.value.trim();
+                const lastName = lastNameField.value.trim();
+                const department = departmentField.value;
+                
+                if (firstName && lastName && department) {
+                    const deptCode = {
+                        'Engineering': 'ENG',
+                        'Product Management': 'PM',
+                        'Design': 'DES',
+                        'Sales': 'SAL',
+                        'Marketing': 'MKT',
+                        'Executive': 'EXE',
+                        'Human Resources': 'HR',
+                        'Finance': 'FIN'
+                    };
+                    
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const empId = `${deptCode[department] || 'GEN'}${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}${randomNum}`;
+                    employeeIdField.value = empId;
+                }
+            }
+
+            firstNameField.addEventListener('blur', generateEmployeeId);
+            lastNameField.addEventListener('blur', generateEmployeeId);
+            departmentField.addEventListener('change', generateEmployeeId);
+
+            // Set default start date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+
+            // Intersection Observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe elements for animation
+            document.querySelectorAll('.employee-card, .contact-item').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
