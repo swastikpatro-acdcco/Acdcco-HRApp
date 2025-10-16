@@ -1,0 +1,146 @@
+/* Page wrap */
+.add-employee-wrap {
+  max-width: 920px;
+  margin: 32px auto 0;
+  padding: 0 16px;
+}
+
+/* Title & subtitle */
+.add-employee-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.add-employee-subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin: 8px 0 24px;
+}
+
+/* Form card */
+.ae-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.06);
+  padding: 22px 22px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns like the screenshot */
+  gap: 16px 18px;                 /* row gap / column gap */
+}
+
+/* Field */
+.ae-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ae-span-2 {
+  grid-column: 1 / span 2; /* full width rows */
+}
+
+.ae-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Inputs/selects */
+.ae-field input,
+.ae-field select,
+.ae-field textarea {
+  height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ae-field textarea {
+  height: auto;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.ae-field input:hover,
+.ae-field select:hover,
+.ae-field textarea:hover {
+  border-color: #d1d5db;
+}
+
+.ae-field input:focus,
+.ae-field select:focus,
+.ae-field textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+/* Actions */
+.ae-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.ae-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #7c3aed; /* purple */
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.32);
+  transition: transform 0.06s ease, opacity 0.2s ease, box-shadow 0.15s ease;
+}
+
+.ae-submit:hover {
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.38);
+}
+
+.ae-submit:active {
+  transform: translateY(1px);
+}
+
+.ae-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ae-submit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Message */
+.ae-msg {
+  margin: 12px 8px 0;
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .ae-form {
+    grid-template-columns: 1fr;
+    padding: 18px 14px;
+  }
+  .ae-span-2 {
+    grid-column: auto;
+  }
+}
