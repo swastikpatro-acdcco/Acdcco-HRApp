@@ -1,8 +1,14 @@
 import client from "./client";
 
-
 export async function createPerson(payload) {
-  // Backend expects Person fields; we accept your form's frontend shape and map it.
+  const tcRaw = payload.time_commitment;
+  const tc =
+    tcRaw === "" || tcRaw === null || tcRaw === undefined
+      ? null
+      : Number.isFinite(parseInt(tcRaw, 10))
+      ? parseInt(tcRaw, 10)
+      : null;
+
   const body = {
     full_name: payload.name || "",
     position: payload.title || "",
@@ -19,10 +25,11 @@ export async function createPerson(payload) {
     personal_email: payload.personal_email || null,
     phone: payload.phone || null,
     subteam: payload.subteam || null,
+    time_commitment: tc, // <-- send it
   };
 
   const { data } = await client.post("/people/", body);
-  return data; // returns the created Person from backend
+  return data;
 }
 
 export async function updatePerson(id, payload) {

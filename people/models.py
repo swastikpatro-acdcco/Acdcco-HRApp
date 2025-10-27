@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # -- Choice lists kept close to the model so the UI and backend stay in sync --
 DEPARTMENT_CHOICES = [
@@ -16,8 +17,9 @@ DEPARTMENT_CHOICES = [
 
 POSITION_CHOICES = [
     ("Volunteer", "Volunteer"),
+    ("Manager", "Manager"),
+    ("Asst. Director", "Asst. Director"),
     ("Director", "Director"),
-    ("Admin", "Admin"),
 ]
 
 # Matches explicit Postgres enum values
@@ -38,7 +40,8 @@ class Person(models.Model):
     phone = models.TextField(blank=True, null=True)
 
     # -- Employment --
-    department = models.TextField(choices=DEPARTMENT_CHOICES, help_text="Department (required)")
+    # Allow any department name (UI can add new ones inline)
+    department = models.TextField(help_text="Department (required)")
     subteam = models.TextField(blank=True, null=True)
 
     position = models.TextField(choices=POSITION_CHOICES, blank=True, null=True, help_text="Position/Role")
@@ -47,7 +50,13 @@ class Person(models.Model):
 
     timezone = models.TextField(blank=True, null=True)
 
-    time_commitment = models.SmallIntegerField(blank=True, null=True, help_text="Time commitment in hours (0-80)")
+    # Enforce 1–50 hours/week
+    time_commitment = models.SmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(50)],
+        help_text="Time commitment in hours (1-50)",
+    )
 
     start_date = models.DateField(help_text="Start date (required)")
     end_date = models.DateField(blank=True, null=True, help_text="End date")
@@ -65,7 +74,7 @@ class Person(models.Model):
         ordering = ["full_name"]
         constraints = [
             models.CheckConstraint(
-                check=Q(time_commitment__gte=0) & Q(time_commitment__lte=80),
+                check=Q(time_commitment__gte=1) & Q(time_commitment__lte=50),
                 name="time_commitment_range",
             ),
         ]
@@ -81,8 +90,8 @@ class Person(models.Model):
         if self.end_date and self.start_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "End date cannot be before start date."})
 
-        if self.time_commitment is not None and not (0 <= self.time_commitment <= 80):
-            raise ValidationError({"time_commitment": "Time commitment must be between 0 and 80 hours."})
+        if self.time_commitment is not None and not (1 <= self.time_commitment <= 50):
+            raise ValidationError({"time_commitment": "Time commitment must be between 1 and 50 hours."})
 
         if (
             self.acdc_email and self.personal_email and

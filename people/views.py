@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from .models import Person
 from .serializers import PersonSerializer
 
+
 class PersonViewSet(viewsets.ModelViewSet):
     """
     Default CRUD:
@@ -24,6 +25,40 @@ class PersonViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["full_name", "department", "subteam", "position", "status", "acdc_email", "personal_email"]
     ordering_fields = ["full_name", "start_date", "department", "position", "created_at"]
+
+    # ---------------------------------------------------------------------
+    # Override create to map frontend keys and include time_commitment
+    # ---------------------------------------------------------------------
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+
+        # Frontend sends these names:
+        #  - name        -> full_name
+        #  - startDate   -> start_date
+        #  - location    -> timezone
+        if "name" in data and not data.get("full_name"):
+            data["full_name"] = data.pop("name")
+        if "startDate" in data:
+            data["start_date"] = data.pop("startDate")
+        if "location" in data:
+            data["timezone"] = data.pop("location")
+
+        # Coerce time_commitment to int or None (frontend sends number as string)
+        if "time_commitment" in data:
+            tc = data.get("time_commitment")
+            if tc in ("", None):
+                data["time_commitment"] = None
+            else:
+                try:
+                    data["time_commitment"] = int(tc)
+                except (TypeError, ValueError):
+                    data["time_commitment"] = None
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     # ---------------------------------------------------------------------
     # Filter by department and/or status
