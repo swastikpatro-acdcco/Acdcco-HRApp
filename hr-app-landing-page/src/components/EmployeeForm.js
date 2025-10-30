@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createPerson } from "../api/people";
 import "./EmployeeForm.css";
- 
+
 const INITIAL_DEPARTMENTS = [
   "Engineering",
   "Product Management",
@@ -16,7 +16,7 @@ const INITIAL_DEPARTMENTS = [
 const POSITION_CHOICES = ["Volunteer", "Manager", "Asst. Director", "Director"];
 const REPORTS_TO_CHOICES = ["Asst. Director", "Director", "Jenny"];
 const ADD_NEW_DEPT_VALUE = "__ADD_NEW_DEPARTMENT__";
- 
+
 function EmployeeForm({ onAddEmployee }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -24,20 +24,20 @@ function EmployeeForm({ onAddEmployee }) {
   const [deptValue, setDeptValue] = useState("");
   const [showNewDeptInput, setShowNewDeptInput] = useState(false);
   const [newDeptName, setNewDeptName] = useState("");
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
     setLoading(true);
     setMessage("");
- 
+
     try {
       const fd = new FormData(form);
- 
+
       const fullName = `${(fd.get("first_name") || "").trim()} ${(fd.get(
         "last_name"
       ) || "").trim()}`.trim();
- 
+
       const payload = {
         name: fullName || fd.get("name") || "",
         title: fd.get("position") || fd.get("title") || "",
@@ -53,10 +53,12 @@ function EmployeeForm({ onAddEmployee }) {
           const v = parseInt(fd.get("time_commitment"), 10);
           return Number.isFinite(v) ? v : null;
         })(),
+        // NEW: persist Reports To
+        reports_to: fd.get("reports_to") || "",
       };
- 
+
       const created = await createPerson(payload);
- 
+
       const mapped = {
         name: created.full_name,
         title: created.position,
@@ -72,6 +74,8 @@ function EmployeeForm({ onAddEmployee }) {
         acdc_email: created.acdc_email,
         personal_email: created.personal_email,
         phone: created.phone,
+        // surface in the UI if needed
+        reports_to: created.reports_to || "",
       };
       onAddEmployee(mapped);
       form.reset();
@@ -110,14 +114,14 @@ function EmployeeForm({ onAddEmployee }) {
     setShowNewDeptInput(false);
     setNewDeptName("");
   };
- 
+
   return (
     <section className="add-employee-wrap" id="add-employee">
       <h1 className="add-employee-title">Add New Employee</h1>
       <p className="add-employee-subtitle">
         Register a new team member to the ACDC HR system
       </p>
- 
+
       <form className="ae-form" onSubmit={handleSubmit}>
         <div className="ae-field">
           <label className="ae-label">First Name *</label>
@@ -127,7 +131,7 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Last Name *</label>
           <input name="last_name" required placeholder="Enter last name" />
         </div>
- 
+
         <div className="ae-field">
           <label className="ae-label">Email Address *</label>
           <input
@@ -141,7 +145,7 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Phone Number</label>
           <input name="phone" placeholder="(555) 555-5555" />
         </div>
- 
+
         <div className="ae-field">
           <label className="ae-label">Employee ID *</label>
           <input name="subteam" required placeholder="e.g., EMP-1042" />
@@ -150,7 +154,7 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Start Date *</label>
           <input type="date" name="startDate" required />
         </div>
- 
+
         <div className="ae-field">
           <label className="ae-label">Department *</label>
           <select
@@ -201,7 +205,7 @@ function EmployeeForm({ onAddEmployee }) {
             ))}
           </select>
         </div>
- 
+
         {/* REPLACED "Role Level" WITH "Time Commitment" */}
         <div className="ae-field">
           <label className="ae-label">Time Commitment (hours/week) *</label>
@@ -229,26 +233,31 @@ function EmployeeForm({ onAddEmployee }) {
             <option value="UTC">UTC</option>
           </select>
         </div>
- 
+
         <div className="ae-field">
           <label className="ae-label">Reports To</label>
           <select name="reports_to" defaultValue="">
-            <option value="" disabled>Select Reports To</option>
+            <option value="" disabled>
+              Select Reports To
+            </option>
             {REPORTS_TO_CHOICES.map((o) => (
-              <option key={o} value={o}>{o}</option>
+              <option key={o} value={o}>
+                {o}
+              </option>
             ))}
           </select>
         </div>
+
         <div className="ae-field">
           <label className="ae-label">Annual Salary</label>
           <input name="salary" placeholder="Enter annual salary" />
         </div>
- 
+
         <div className="ae-field ae-span-2">
           <label className="ae-label">ACDC Email</label>
           <input name="acdc_email" placeholder="user@acdc.com" />
         </div>
- 
+
         <div className="ae-field ae-span-2">
           <label className="ae-label">Skills & Technologies</label>
           <input
@@ -256,7 +265,7 @@ function EmployeeForm({ onAddEmployee }) {
             placeholder="React, Python, Django, etc. (comma separated)"
           />
         </div>
- 
+
         <div className="ae-field ae-span-2">
           <label className="ae-label">Bio/Description</label>
           <textarea
@@ -265,9 +274,9 @@ function EmployeeForm({ onAddEmployee }) {
             placeholder="Brief description about the employee..."
           />
         </div>
- 
+
         <input type="hidden" name="status" value="Employee" />
- 
+
         <div className="ae-actions ae-span-2">
           <button type="submit" className="ae-submit" disabled={loading}>
             <span className="ae-submit-icon">👤</span>
@@ -275,10 +284,10 @@ function EmployeeForm({ onAddEmployee }) {
           </button>
         </div>
       </form>
- 
+
       {message && <p className="ae-msg">{message}</p>}
     </section>
   );
 }
- 
+
 export default EmployeeForm;

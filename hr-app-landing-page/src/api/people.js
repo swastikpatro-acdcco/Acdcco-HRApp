@@ -25,7 +25,9 @@ export async function createPerson(payload) {
     personal_email: payload.personal_email || null,
     phone: payload.phone || null,
     subteam: payload.subteam || null,
-    time_commitment: tc, // <-- send it
+    time_commitment: tc,
+    // ✅ NEW FIELD
+    reports_to: payload.reports_to || null,
   };
 
   const { data } = await client.post("/people/", body);

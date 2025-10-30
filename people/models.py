@@ -43,6 +43,7 @@ class Person(models.Model):
     # Allow any department name (UI can add new ones inline)
     department = models.TextField(help_text="Department (required)")
     subteam = models.TextField(blank=True, null=True)
+    reports_to = models.TextField(blank=True, null=True, help_text="Manager/Supervisor")  # <— added
 
     position = models.TextField(choices=POSITION_CHOICES, blank=True, null=True, help_text="Position/Role")
 
