@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "ACDC HR Management System - React Version",
   "main": "src/index.js",
+  "proxy": "http://127.0.0.1:8000",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
