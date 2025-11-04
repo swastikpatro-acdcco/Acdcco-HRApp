@@ -55,3 +55,10 @@ static_root/
 .env
 .env.local
 .env.*.local
+
+# local Python venvs
+.venv/
+ACDC-env/
+
+# React deps
+hr-app-landing-page/node_modules/
