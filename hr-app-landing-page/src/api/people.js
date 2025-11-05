@@ -1,11 +1,17 @@
 import client from "./client";
 
-
 export async function createPerson(payload) {
-  // Backend expects Person fields; we accept your form's frontend shape and map it.
+  // normalize time_commitment to a number or null
+  const tcRaw = payload.time_commitment;
+  const timeCommitment =
+    tcRaw === "" || tcRaw === undefined || tcRaw === null
+      ? null
+      : Number.parseInt(tcRaw, 10);
+
   const body = {
     full_name: payload.name || "",
-    position: payload.title || "",
+    // position can come from your select as "position" or from older code as "title"
+    position: payload.position || payload.title || "",
     department: payload.department || "",
     status:
       payload.status === "On leave"
@@ -19,6 +25,10 @@ export async function createPerson(payload) {
     personal_email: payload.personal_email || null,
     phone: payload.phone || null,
     subteam: payload.subteam || null,
+
+    // 👇 new fields
+    time_commitment: timeCommitment,
+    reports_to: payload.reports_to || "",
   };
 
   const { data } = await client.post("/people/", body);

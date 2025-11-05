@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { createPerson } from "../api/people";
 import "./EmployeeForm.css";
- 
-const DEPARTMENTS = [
+
+// initial departments (will go into state)
+const INITIAL_DEPARTMENTS = [
   "Engineering",
   "Product Management",
   "Design",
@@ -12,47 +13,103 @@ const DEPARTMENTS = [
   "Human Resources",
   "Finance",
 ];
- 
+
 // Backend-allowed choices for position
-const POSITION_CHOICES = ["Volunteer", "Director", "Admin"];
- 
+const POSITION_CHOICES = [
+  "Volunteer",
+  "Manager",
+  "Asst. Director",
+  "Director",
+];
+
+// fixed list for Reports To
+const REPORTS_TO_CHOICES = ["Asst. Director", "Director", "Jenny"];
+
+// special value to detect "add new" choice
+const ADD_NEW_DEPT_VALUE = "__ADD_NEW_DEPARTMENT__";
+
 function EmployeeForm({ onAddEmployee }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
- 
+
+  // departments we show in the dropdown
+  const [departments, setDepartments] = useState(INITIAL_DEPARTMENTS);
+  // which department is currently selected
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  // controls the inline "add new department" UI
+  const [showNewDeptInput, setShowNewDeptInput] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
+
+  const handleDepartmentChange = (e) => {
+    const value = e.target.value;
+    // if user picked "Add new department..."
+    if (value === ADD_NEW_DEPT_VALUE) {
+      setShowNewDeptInput(true);
+      setNewDeptName("");
+      return;
+    }
+
+    // normal selection
+    setSelectedDepartment(value);
+    setShowNewDeptInput(false);
+    setNewDeptName("");
+  };
+
+  const handleAddNewDept = () => {
+    const trimmed = newDeptName.trim();
+    if (!trimmed) return;
+    setDepartments((prev) => {
+      if (prev.includes(trimmed)) return prev;
+      return [...prev, trimmed];
+    });
+    setSelectedDepartment(trimmed);
+    setShowNewDeptInput(false);
+    setNewDeptName("");
+  };
+
+  const handleCancelNewDept = () => {
+    setShowNewDeptInput(false);
+    setNewDeptName("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
     setLoading(true);
     setMessage("");
- 
+
     try {
       const fd = new FormData(form);
- 
+
       // Join first + last so your backend keeps receiving `name`
       const fullName = `${(fd.get("first_name") || "").trim()} ${(fd.get(
         "last_name"
       ) || "").trim()}`.trim();
- 
+
       const payload = {
         name: fullName || fd.get("name") || "",
- 
-        // IMPORTANT: prefer the constrained `position` field; fall back to free-text `title`
+
+        // prefer the constrained `position` field; fall back to free-text `title`
         title: fd.get("position") || fd.get("title") || "",
- 
+
         department: fd.get("department") || "",
-        status: fd.get("status") || "Employee", // hidden default
+        status: fd.get("status") || "Employee",
         startDate: fd.get("startDate") || "",
-        location: fd.get("location") || "", // timezone / location
+        location: fd.get("location") || "",
         acdc_email: fd.get("acdc_email") || "",
         personal_email: fd.get("personal_email") || fd.get("email") || "",
         phone: fd.get("phone") || "",
-        subteam: fd.get("subteam") || "", // optional, kept for compatibility
+        subteam: fd.get("subteam") || "",
+        reports_to: fd.get("reports_to") || "",
+        salary: fd.get("salary") || "",
+        skills: fd.get("skills") || "",
+        bio: fd.get("bio") || "",
+        // 👇 NEW: send time commitment to backend
+        time_commitment: fd.get("time_commitment") || "",
       };
- 
+
       const created = await createPerson(payload);
- 
-      // Map back to your directory card shape
+
       const mapped = {
         name: created.full_name,
         title: created.position,
@@ -68,9 +125,14 @@ function EmployeeForm({ onAddEmployee }) {
         acdc_email: created.acdc_email,
         personal_email: created.personal_email,
         phone: created.phone,
+        reports_to: created.reports_to,
+        time_commitment: created.time_commitment,
       };
       onAddEmployee(mapped);
       form.reset();
+      setSelectedDepartment("");
+      setShowNewDeptInput(false);
+      setNewDeptName("");
       setMessage("✅ Employee added successfully");
     } catch (err) {
       console.error("Error creating employee:", err);
@@ -79,14 +141,14 @@ function EmployeeForm({ onAddEmployee }) {
       setLoading(false);
     }
   };
- 
+
   return (
     <section className="add-employee-wrap" id="add-employee">
       <h1 className="add-employee-title">Add New Employee</h1>
       <p className="add-employee-subtitle">
         Register a new team member to the ACDC HR system
       </p>
- 
+
       <form className="ae-form" onSubmit={handleSubmit}>
         {/* Row 1 */}
         <div className="ae-field">
@@ -97,7 +159,7 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Last Name *</label>
           <input name="last_name" required placeholder="Enter last name" />
         </div>
- 
+
         {/* Row 2 */}
         <div className="ae-field">
           <label className="ae-label">Email Address *</label>
@@ -112,7 +174,7 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Phone Number</label>
           <input name="phone" placeholder="(555) 555-5555" />
         </div>
- 
+
         {/* Row 3 */}
         <div className="ae-field">
           <label className="ae-label">Employee ID *</label>
@@ -122,24 +184,70 @@ function EmployeeForm({ onAddEmployee }) {
           <label className="ae-label">Start Date *</label>
           <input type="date" name="startDate" required />
         </div>
- 
+
         {/* Row 4 */}
         <div className="ae-field">
           <label className="ae-label">Department *</label>
-          <select name="department" required defaultValue="">
+          <select
+            name="department"
+            required
+            value={selectedDepartment}
+            onChange={handleDepartmentChange}
+          >
             <option value="" disabled>
               Select Department
             </option>
-            {DEPARTMENTS.map((d) => (
+            {departments.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
             ))}
+            <option value={ADD_NEW_DEPT_VALUE}>+ Add new department...</option>
           </select>
+
+          {showNewDeptInput && (
+            <div
+              style={{
+                marginTop: "6px",
+                display: "flex",
+                gap: "6px",
+              }}
+            >
+              <input
+                type="text"
+                value={newDeptName}
+                onChange={(e) => setNewDeptName(e.target.value)}
+                placeholder="New department name"
+                className="ae-input"
+                style={{ flex: 1, padding: "6px 10px" }}
+              />
+              <button
+                type="button"
+                onClick={handleAddNewDept}
+                className="ae-submit"
+                style={{ padding: "6px 10px" }}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelNewDept}
+                style={{
+                  padding: "6px 10px",
+                  background: "#eee",
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
+
         <div className="ae-field">
           <label className="ae-label">Position/Title *</label>
-          {/* Constrained select to match backend choices */}
           <select name="position" required defaultValue="">
             <option value="" disabled>
               Select Position / Title
@@ -151,21 +259,20 @@ function EmployeeForm({ onAddEmployee }) {
             ))}
           </select>
         </div>
- 
-        {/* Row 5 */}
+
+        {/* Row 5 (was Role Level) */}
         <div className="ae-field">
-          <label className="ae-label">Role Level *</label>
-          <select defaultValue="">
-            <option value="" disabled>
-              Select Role
-            </option>
-            <option>Intern</option>
-            <option>Junior</option>
-            <option>Mid</option>
-            <option>Senior</option>
-            <option>Lead</option>
-          </select>
+          <label className="ae-label">Time Commitment (hours/week) *</label>
+          <input
+            name="time_commitment"
+            type="number"
+            min="1"
+            max="50"
+            required
+            placeholder="e.g., 10"
+          />
         </div>
+
         <div className="ae-field">
           <label className="ae-label">Work Location *</label>
           <select name="location" defaultValue="" required>
@@ -179,23 +286,32 @@ function EmployeeForm({ onAddEmployee }) {
             <option value="UTC">UTC</option>
           </select>
         </div>
- 
+
         {/* Row 6 */}
         <div className="ae-field">
           <label className="ae-label">Reports To</label>
-          <input name="reports_to" placeholder="Manager/Supervisor Name" />
+          <select name="reports_to" defaultValue="">
+            <option value="" disabled>
+              Select a manager
+            </option>
+            {REPORTS_TO_CHOICES.map((mgr) => (
+              <option key={mgr} value={mgr}>
+                {mgr}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="ae-field">
           <label className="ae-label">Annual Salary</label>
           <input name="salary" placeholder="Enter annual salary" />
         </div>
- 
+
         {/* Row 7 */}
         <div className="ae-field ae-span-2">
           <label className="ae-label">ACDC Email</label>
           <input name="acdc_email" placeholder="user@acdc.com" />
         </div>
- 
+
         {/* Row 8 */}
         <div className="ae-field ae-span-2">
           <label className="ae-label">Skills & Technologies</label>
@@ -204,7 +320,7 @@ function EmployeeForm({ onAddEmployee }) {
             placeholder="React, Python, Django, etc. (comma separated)"
           />
         </div>
- 
+
         {/* Row 9 */}
         <div className="ae-field ae-span-2">
           <label className="ae-label">Bio/Description</label>
@@ -214,11 +330,9 @@ function EmployeeForm({ onAddEmployee }) {
             placeholder="Brief description about the employee..."
           />
         </div>
- 
-        {/* Hidden default to keep your backend status mapping */}
+
         <input type="hidden" name="status" value="Employee" />
- 
-        {/* Submit */}
+
         <div className="ae-actions ae-span-2">
           <button type="submit" className="ae-submit" disabled={loading}>
             <span className="ae-submit-icon">👤</span>
@@ -226,10 +340,10 @@ function EmployeeForm({ onAddEmployee }) {
           </button>
         </div>
       </form>
- 
+
       {message && <p className="ae-msg">{message}</p>}
     </section>
   );
 }
- 
+
 export default EmployeeForm;

@@ -1,9 +1,8 @@
+// hr-app-landing-page/src/api/client.js
 import axios from "axios";
 
-const baseURL = `${process.env.REACT_APP_API_BASE_URL}/api`;
-
 const client = axios.create({
-  baseURL,
+  baseURL: "/api", // <— relative, no localhost, no ports
   timeout: 15000,
 });
 
