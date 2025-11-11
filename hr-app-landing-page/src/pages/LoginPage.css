@@ -1,0 +1,132 @@
+/* Full page wrapper */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;  
+  width: 100vw;
+  background: linear-gradient(135deg, #6f71e6, #8b5cf6);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+/* Card */
+.login-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 45px 48px;
+  width: 440px;
+  max-width: 92vw;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Title & Subtitle */
+.login-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+.login-form label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;   
+  color: #111827;
+}
+
+.login-form input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.login-form input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+
+/* Button */
+.login-btn {
+  margin-top: 6px;
+  width: 100%;
+  color: white;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.32);
+  transition: transform 0.06s ease, opacity 0.2s ease, box-shadow 0.15s ease;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #6d28d9, #5e25ba);
+  transform: translateY(1px);
+}
+
+.login-btn:active {
+  transform: translateY(1px);
+}
+
+.login-error {
+  color: #dc2626;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 28px 24px;
+  }
+
+  .login-title {
+    font-size: 22px;
+  }
+
+  .login-subtitle {
+    font-size: 13px;
+  }
+}
+
+#root, .App {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}

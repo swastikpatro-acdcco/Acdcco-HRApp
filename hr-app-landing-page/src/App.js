@@ -1,98 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import client from './api/client';
-import Navigation from './components/Navigation';
-import Hero from './components/Hero';
-import EmployeeDirectory from './components/EmployeeDirectory';
-import EmployeeForm from './components/EmployeeForm';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
-import Dashboard from './components/Dashboard';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import client from "./api/client";
+import Navigation from "./components/Navigation";
+import Hero from "./components/Hero";
+import EmployeeDirectory from "./components/EmployeeDirectory";
+import EmployeeForm from "./components/EmployeeForm";
+import Contact from "./components/Contact";
+import Footer from "./components/Footer";
+import Dashboard from "./components/Dashboard";
+import LoginPage from "./pages/LoginPage";
+import "./App.css";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch employees from backend
+   const updateEmployee = (oldName, updatedEmployee) => {
+    setEmployees((prev) =>
+      prev.map((emp) => (emp.name === oldName ? updatedEmployee : emp))
+    );
+  };
+
+   const deleteEmployee = (employeeName) => {
+    setEmployees((prev) => prev.filter((emp) => emp.name !== employeeName));
+  };
+
+  // ✅ Fetch backend data only if logged in
   useEffect(() => {
-    let isMounted = true;
+    if (!isAuthenticated) return;
 
-    (async () => {
+    const fetchEmployees = async () => {
       try {
-        const res = await client.get('/people/'); // calls http://localhost:8000/api/people/
+        const res = await client.get("/people/");
         const data = res.data?.results ?? res.data;
-
-        if (isMounted) {
-          
-          const normalized = (Array.isArray(data) ? data : data?.results || []).map(p => ({
-            id: p.id,
-            name: p.full_name || "", // map full_name → name
-            title: p.position || "",
-            department: p.department || "",
-            status: p.status === "on_leave" ? "On leave"
-                   : p.status === "active" ? "Employee"
-                   : (p.status || "Inactive"),
-            startDate: p.start_date || "",
-            location: p.timezone || "", // using timezone as location substitute
-            reportsTo: "", 
-            acdc_email: p.acdc_email || "",
-            personal_email: p.personal_email || "",
-            phone: p.phone || ""
-          }));
-          setEmployees(normalized);
-          console.log('Loaded employees:', normalized);
-        }
-      } catch (e) {
-        console.error('Error loading employees:', e);
-        if (isMounted) setError('Failed to load employees');
+        const normalized = (Array.isArray(data) ? data : data?.results || []).map((p) => ({
+          id: p.id,
+          name: p.full_name || "",
+          title: p.position || "",
+          department: p.department || "",
+          status:
+            p.status === "on_leave"
+              ? "On leave"
+              : p.status === "active"
+              ? "Employee"
+              : p.status || "Inactive",
+          startDate: p.start_date || "",
+          location: p.timezone || "",
+          acdc_email: p.acdc_email || "",
+          personal_email: p.personal_email || "",
+          phone: p.phone || "",
+        }));
+        setEmployees(normalized);
+      } catch (err) {
+        console.error("Error loading employees:", err);
+        setError("Failed to load employees");
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
-    })();
+    };
 
-    return () => { isMounted = false; };
-  }, []);
+    fetchEmployees();
+  }, [isAuthenticated]);
 
-  
-  const addEmployee = (newEmployee) => {
-    setEmployees([...employees, newEmployee]);
-  };
-
-  const updateEmployee = (oldName, updatedEmployee) => {
-    setEmployees(employees.map(emp => 
-      emp.name === oldName ? updatedEmployee : emp
-    ));
-  };
-
-  const deleteEmployee = (employeeName) => {
-    setEmployees(employees.filter(emp => emp.name !== employeeName));
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const renderPage = () => {
+  const DashboardContent = () => {
     if (loading) return <p>Loading employees...</p>;
-    if (error) return <p style={{ color: 'red' }}>{error}</p>;
-
-    if (currentPage === 'dashboard') {
-      return (
-        <Dashboard 
-          employees={employees} 
-          onUpdateEmployee={updateEmployee}
-          onDeleteEmployee={deleteEmployee}
-        />
-      );
-    }
+    if (error) return <p style={{ color: "red" }}>{error}</p>;
 
     return (
       <>
+        <Navigation />
         <Hero />
         <EmployeeDirectory employees={employees} />
-        <EmployeeForm onAddEmployee={addEmployee} />
+        <EmployeeForm onAddEmployee={(newEmp) => setEmployees([...employees, newEmp])} />
         <Contact />
         <Footer />
       </>
@@ -101,8 +83,51 @@ function App() {
 
   return (
     <div className="App">
-      <Navigation currentPage={currentPage} onPageChange={handlePageChange} />
-      {renderPage()}
+      <Routes>
+        {/* Login page */}
+        <Route
+          path="/"
+          element={
+            <LoginPage
+              onLoginSuccess={() => {
+                setIsAuthenticated(true);
+                navigate("/dashboard");
+              }}
+            />
+          }
+        />
+
+        {/* Home / Landing page */}
+        <Route
+          path="/dashboard"
+          element={
+            isAuthenticated ? (
+              <DashboardContent />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+
+        {/* Employee management dashboard */}
+        <Route
+          path="/employee-dashboard"
+          element={
+            isAuthenticated ? (
+              <>
+                <Navigation />
+                <Dashboard
+                  employees={employees}
+                  onUpdateEmployee={updateEmployee}
+                  onDeleteEmployee={deleteEmployee}
+                />
+              </>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+      </Routes>
     </div>
   );
 }
