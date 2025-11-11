@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Navigation = ({ currentPage, onPageChange = () => {} }) => {
+const Navigation = ({ currentPage, onPageChange = () => {}, isAuthenticated, setIsAuthenticated }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -42,10 +42,18 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
     setIsMenuOpen(false);
 
     if (page === "dashboard") {
-      navigate("/employee-dashboard"); 
+      navigate("/employee-dashboard");
     } else if (page === "landing" || page === "home") {
-      navigate("/dashboard"); 
+      navigate("/dashboard");
     }
+  };
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsAuthenticated(false);
+    setIsMenuOpen(false);
+    navigate("/");
   };
 
   return (
@@ -62,13 +70,20 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
           ACDC HR
         </a>
 
+        {/* Hamburger toggle */}
+        <div className={`nav-toggle ${isMenuOpen ? "open" : ""}`}
+        onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        {/* Menu items */}
         <ul className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
           <li>
             <a
               href="#"
-              className={`nav-link ${
-                currentPage === "dashboard" ? "active" : ""
-              }`}
+              className={`nav-link ${currentPage === "dashboard" ? "active" : ""}`}
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange("dashboard");
@@ -81,9 +96,7 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
           <li>
             <a
               href="#"
-              className={`nav-link ${
-                currentPage === "landing" ? "active" : ""
-              }`}
+              className={`nav-link ${currentPage === "landing" ? "active" : ""}`}
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange("landing");
@@ -134,13 +147,22 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
               Support
             </a>
           </li>
-        </ul>
 
-        <div className="nav-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+          {isAuthenticated && (
+            <li className="logout-item">
+              <a
+                href="#"
+                className="nav-link logout-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLogout();
+                }}
+              >
+                Logout
+              </a>
+            </li>
+          )}
+        </ul>
       </div>
     </nav>
   );

@@ -18,17 +18,18 @@ function App() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-   const updateEmployee = (oldName, updatedEmployee) => {
+  // Update & Delete handlers for Dashboard
+  const updateEmployee = (oldName, updatedEmployee) => {
     setEmployees((prev) =>
       prev.map((emp) => (emp.name === oldName ? updatedEmployee : emp))
     );
   };
 
-   const deleteEmployee = (employeeName) => {
+  const deleteEmployee = (employeeName) => {
     setEmployees((prev) => prev.filter((emp) => emp.name !== employeeName));
   };
 
-  // ✅ Fetch backend data only if logged in
+  // Fetch backend data only if logged in
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -65,16 +66,22 @@ function App() {
     fetchEmployees();
   }, [isAuthenticated]);
 
+  //  Dashboard + Home Content
   const DashboardContent = () => {
     if (loading) return <p>Loading employees...</p>;
     if (error) return <p style={{ color: "red" }}>{error}</p>;
 
     return (
       <>
-        <Navigation />
+        <Navigation
+          isAuthenticated={isAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
+        />
         <Hero />
         <EmployeeDirectory employees={employees} />
-        <EmployeeForm onAddEmployee={(newEmp) => setEmployees([...employees, newEmp])} />
+        <EmployeeForm
+          onAddEmployee={(newEmp) => setEmployees([...employees, newEmp])}
+        />
         <Contact />
         <Footer />
       </>
@@ -84,7 +91,7 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        {/* Login page */}
+        {/* Login Page */}
         <Route
           path="/"
           element={
@@ -97,7 +104,7 @@ function App() {
           }
         />
 
-        {/* Home / Landing page */}
+        {/* Home / Landing Page */}
         <Route
           path="/dashboard"
           element={
@@ -109,13 +116,16 @@ function App() {
           }
         />
 
-        {/* Employee management dashboard */}
+        {/* Employee Management Dashboard */}
         <Route
           path="/employee-dashboard"
           element={
             isAuthenticated ? (
               <>
-                <Navigation />
+                <Navigation
+                  isAuthenticated={isAuthenticated}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
                 <Dashboard
                   employees={employees}
                   onUpdateEmployee={updateEmployee}
