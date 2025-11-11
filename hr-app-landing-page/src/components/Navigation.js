@@ -20,11 +20,9 @@ const Navigation = ({ currentPage, onPageChange }) => {
 
   // Robust smooth scroll (works for items near the bottom and after quick page changes)
   const scrollToSection = (sectionId) => {
-    // If the section content is toggled by page state, give React a tick to paint
     const tryScroll = (attempt = 0) => {
       const el = document.getElementById(sectionId);
       if (el) {
-        // Use bounding rect for accurate absolute Y, then subtract navbar height
         const NAV_OFFSET = 88; // tweak if your navbar height changes
         const y =
           el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
@@ -35,7 +33,6 @@ const Navigation = ({ currentPage, onPageChange }) => {
         });
         setIsMenuOpen(false);
       } else if (attempt < 6) {
-        // If the element isn't in the DOM yet, try again on next frame
         requestAnimationFrame(() => tryScroll(attempt + 1));
       } else {
         setIsMenuOpen(false);
@@ -112,7 +109,6 @@ const Navigation = ({ currentPage, onPageChange }) => {
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange('landing');
-                // this will smoothly scroll to your form section
                 scrollToSection('add-employee');
               }}
             >
@@ -131,6 +127,20 @@ const Navigation = ({ currentPage, onPageChange }) => {
               }}
             >
               Support
+            </a>
+          </li>
+
+          
+          <li>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'register' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handlePageChange('register');
+              }}
+            >
+              Register
             </a>
           </li>
         </ul>
