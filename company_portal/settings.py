@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from datetime import timedelta  # NEW: Added for JWT token lifetime configuration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     'people',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',                    # NEW: JWT authentication
+    'rest_framework_simplejwt.token_blacklist',    # NEW: Token blacklist for logout
 ]
 
 MIDDLEWARE = [
@@ -63,10 +66,56 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
 ]
 
+# UPDATED: REST Framework configuration with JWT authentication
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT auth
+        'rest_framework.authentication.SessionAuthentication',        # Session auth for browsable API
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # No auth for now
+        'rest_framework.permissions.AllowAny',  # Keep as AllowAny for now
     ]
+}
+
+# NEW: JWT Configuration
+SIMPLE_JWT = {
+    # Access token expires after 60 minutes
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    
+    # Refresh token expires after 7 days
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    
+    # Issue new refresh token on refresh (recommended for security)
+    'ROTATE_REFRESH_TOKENS': True,
+    
+    # Blacklist old refresh tokens after rotation (recommended for security)
+    'BLACKLIST_AFTER_ROTATION': True,
+    
+    # Update last_login field on token generation
+    'UPDATE_LAST_LOGIN': True,
+    
+    # Signing algorithm
+    'ALGORITHM': 'HS256',
+    
+    # Use Django's SECRET_KEY for signing tokens
+    'SIGNING_KEY': SECRET_KEY,
+    
+    # Verification settings (not used for symmetric algorithms like HS256)
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    
+    # Authorization header format: "Authorization: Bearer <token>"
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    
+    # User identification
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    
+    # Token classes
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
 

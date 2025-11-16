@@ -1,12 +1,13 @@
 # ACDC HR Application
 
-A Django-based HR management application using PostgreSQL for managing employee information.
+A Django-based HR management application using PostgreSQL for managing employee information with JWT authentication.
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
+- [Authentication & User Management](#authentication--user-management)
 - [API Testing](#api-testing)
 - [Troubleshooting](#troubleshooting)
 
@@ -51,6 +52,7 @@ Required packages include:
 - Django 5.2.5
 - psycopg2-binary (PostgreSQL adapter)
 - djangorestframework
+- djangorestframework-simplejwt (JWT authentication)
 - django-cors-headers
 
 ## Database Setup
@@ -189,7 +191,7 @@ python manage.py migrate
 ```bash
 python manage.py dbshell
 \dt
-# You should see: people, django_session, auth_user, etc.
+# You should see: people, django_session, auth_user, token_blacklist_*, etc.
 \q
 ```
 
@@ -273,6 +275,395 @@ for p in people:
 exit()
 ```
 
+## Authentication & User Management
+
+The application uses JWT (JSON Web Token) authentication for secure API access.
+
+### Prerequisites
+- Ensure the development server is running:
+```bash
+python manage.py runserver
+```
+
+### 1. User Registration
+
+Register a new user account:
+
+**Endpoint:** `POST /api/register/`
+
+**Request Body:**
+```json
+{
+  "username": "john_doe",
+  "email": "john@acdcco.org",
+  "password": "SecurePass123!",
+  "password2": "SecurePass123!",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://127.0.0.1:8000/api/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "email": "john@acdcco.org",
+    "password": "SecurePass123!",
+    "password2": "SecurePass123!",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "user": {
+    "id": 3,
+    "username": "john_doe",
+    "email": "john@acdcco.org",
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "message": "User registered successfully! You can now login."
+}
+```
+
+**Validation:**
+- Username must be unique (3+ characters, no spaces)
+- Email must be unique and valid
+- Password must be strong (8+ characters, not common)
+- password and password2 must match
+
+### 2. User Login (Get JWT Tokens)
+
+Login to receive access and refresh tokens:
+
+**Endpoint:** `POST /api/token/`
+
+**Request Body:**
+```json
+{
+  "username": "john_doe",
+  "password": "SecurePass123!"
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://127.0.0.1:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "password": "SecurePass123!"
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczMTk0ODIzOCwiaWF0IjoxNzMxMzQzNDM4LCJqdGkiOiJhYmMxMjM0NTY3ODkiLCJ1c2VyX2lkIjozfQ.xyz...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxMzQ3MDM4LCJpYXQiOjE3MzEzNDM0MzgsImp0aSI6ImRlZjk4NzY1NDMyMSIsInVzZXJfaWQiOjN9.abc..."
+}
+```
+
+**Token Lifetimes:**
+- **Access Token:** Valid for 60 minutes (use for API requests)
+- **Refresh Token:** Valid for 7 days (use to get new access tokens)
+
+**Store these tokens securely!** You'll need them for authenticated requests.
+
+### 3. Using Access Tokens (Protected Endpoints)
+
+Include the access token in the Authorization header for protected endpoints:
+
+**Example - Get User Profile:**
+
+**Endpoint:** `GET /api/profile/`
+
+**Headers:**
+```
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+```
+
+**cURL Example:**
+```bash
+curl http://127.0.0.1:8000/api/profile/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 3,
+  "username": "john_doe",
+  "email": "john@acdcco.org",
+  "first_name": "John",
+  "last_name": "Doe",
+  "is_staff": false,
+  "is_active": true,
+  "date_joined": "2024-11-11T14:30:38.123456Z",
+  "last_login": "2024-11-11T15:00:00.000000Z"
+}
+```
+
+**Without Token (401 Unauthorized):**
+```json
+{
+  "detail": "Authentication credentials were not provided."
+}
+```
+
+### 4. Refresh Access Token
+
+When your access token expires (after 60 minutes), use the refresh token to get a new access token:
+
+**Endpoint:** `POST /api/token/refresh/`
+
+**Request Body:**
+```json
+{
+  "refresh": "YOUR_REFRESH_TOKEN_HERE"
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://127.0.0.1:8000/api/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.NEW_ACCESS_TOKEN..."
+}
+```
+
+**Note:** With `ROTATE_REFRESH_TOKENS: True`, you may also receive a new refresh token.
+
+### 5. Logout (Blacklist Token)
+
+Invalidate your refresh token to log out:
+
+**Endpoint:** `POST /api/token/blacklist/`
+
+**Request Body:**
+```json
+{
+  "refresh": "YOUR_REFRESH_TOKEN_HERE"
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://127.0.0.1:8000/api/token/blacklist/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "detail": "Token is blacklisted"
+}
+```
+
+After blacklisting, the refresh token cannot be used again. The user must log in to get new tokens.
+
+### 6. Change Password
+
+Change password for authenticated user:
+
+**Endpoint:** `POST /api/change-password/`
+
+**Headers:**
+```
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+```
+
+**Request Body:**
+```json
+{
+  "old_password": "SecurePass123!",
+  "new_password": "NewSecurePass456!",
+  "new_password2": "NewSecurePass456!"
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://127.0.0.1:8000/api/change-password/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "old_password": "SecurePass123!",
+    "new_password": "NewSecurePass456!",
+    "new_password2": "NewSecurePass456!"
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Password changed successfully"
+}
+```
+
+### 7. List All Users (Authenticated)
+
+Get a list of all registered users:
+
+**Endpoint:** `GET /api/users/`
+
+**Headers:**
+```
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+```
+
+**cURL Example:**
+```bash
+curl http://127.0.0.1:8000/api/users/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@acdcco.org",
+    "first_name": "Admin",
+    "last_name": "User",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2024-11-01T10:00:00Z"
+  },
+  {
+    "id": 3,
+    "username": "john_doe",
+    "email": "john@acdcco.org",
+    "first_name": "John",
+    "last_name": "Doe",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2024-11-11T14:30:38Z"
+  }
+]
+```
+
+### Authentication Testing with Postman
+
+#### Setup:
+
+1. **Create a Collection:** "ACDC HR API"
+2. **Set Collection Variables:**
+   - `base_url`: `http://127.0.0.1:8000`
+   - `access_token`: (leave empty, will be set automatically)
+   - `refresh_token`: (leave empty, will be set automatically)
+
+#### Test 1: Register User
+
+- **Method:** POST
+- **URL:** `{{base_url}}/api/register/`
+- **Headers:** `Content-Type: application/json`
+- **Body (raw JSON):**
+```json
+{
+  "username": "test_user",
+  "email": "test@acdcco.org",
+  "password": "TestPass123!",
+  "password2": "TestPass123!",
+  "first_name": "Test",
+  "last_name": "User"
+}
+```
+
+#### Test 2: Login
+
+- **Method:** POST
+- **URL:** `{{base_url}}/api/token/`
+- **Headers:** `Content-Type: application/json`
+- **Body (raw JSON):**
+```json
+{
+  "username": "test_user",
+  "password": "TestPass123!"
+}
+```
+- **Tests Tab (Auto-save tokens):**
+```javascript
+var jsonData = pm.response.json();
+pm.collectionVariables.set("access_token", jsonData.access);
+pm.collectionVariables.set("refresh_token", jsonData.refresh);
+```
+
+#### Test 3: Get Profile
+
+- **Method:** GET
+- **URL:** `{{base_url}}/api/profile/`
+- **Authorization:** Bearer Token → `{{access_token}}`
+
+#### Test 4: Refresh Token
+
+- **Method:** POST
+- **URL:** `{{base_url}}/api/token/refresh/`
+- **Headers:** `Content-Type: application/json`
+- **Body (raw JSON):**
+```json
+{
+  "refresh": "{{refresh_token}}"
+}
+```
+
+#### Test 5: Logout
+
+- **Method:** POST
+- **URL:** `{{base_url}}/api/token/blacklist/`
+- **Headers:** `Content-Type: application/json`
+- **Body (raw JSON):**
+```json
+{
+  "refresh": "{{refresh_token}}"
+}
+```
+
+### Complete Authentication Flow
+
+```
+1. User Registration
+   POST /api/register/ → User created in auth_user table
+
+2. User Login
+   POST /api/token/ → Returns access + refresh tokens
+
+3. Access Protected API
+   GET /api/profile/ (with Authorization header) → Returns user data
+
+4. Access Token Expires (after 60 min)
+   GET /api/profile/ → 401 Unauthorized "Token expired"
+
+5. Refresh Token
+   POST /api/token/refresh/ → Returns new access token
+
+6. Continue Using API
+   GET /api/profile/ (with new token) → Works again
+
+7. User Logout
+   POST /api/token/blacklist/ → Refresh token invalidated
+   
+8. Must Login Again
+   POST /api/token/ → Get new tokens
+```
+
 ## API Testing
 
 The application provides REST API endpoints for managing employee data.
@@ -280,14 +671,23 @@ The application provides REST API endpoints for managing employee data.
 ### Prerequisites
 - Ensure the development server is running:
 ```bash
-  python manage.py runserver
+python manage.py runserver
 ```
+
+**Note:** Employee endpoints will require JWT authentication if `IsAuthenticated` permission is enabled.
+
 ## Available Endpoints
 
 ### 1. List All Employees
 
 ```bash
 GET http://127.0.0.1:8000/api/employees/
+```
+
+**With Authentication:**
+```bash
+curl http://127.0.0.1:8000/api/employees/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ### 2. Filter Employees
@@ -307,6 +707,12 @@ Filter by both:
 GET http://127.0.0.1:8000/api/employees/filter_employees/?department=Engineering&status=active
 ```
 
+**With Authentication:**
+```bash
+curl "http://127.0.0.1:8000/api/employees/filter_employees/?department=Engineering" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
 ### 3. Delete Employee
 
 Delete by email (recommended):
@@ -317,6 +723,12 @@ DELETE http://127.0.0.1:8000/api/employees/delete_by_identifier/?email=john.doe@
 Delete by full name:
 ```bash
 DELETE http://127.0.0.1:8000/api/employees/delete_by_identifier/?full_name=John Doe
+```
+
+**With Authentication:**
+```bash
+curl -X DELETE "http://127.0.0.1:8000/api/employees/delete_by_identifier/?email=john.doe@acdcco.org" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ## Troubleshooting
@@ -408,9 +820,48 @@ psql -U postgres -h localhost
 python manage.py dbshell
 ```
 
+### Issue: "No active account found with the given credentials"
+
+**Solution:**
+```bash
+# Verify user exists
+python manage.py shell
+from django.contrib.auth.models import User
+User.objects.filter(username='your_username').exists()
+exit()
+
+# If user doesn't exist, register via /api/register/
+# If user exists, verify password is correct
+```
+
+### Issue: "Authentication credentials were not provided"
+
+**Solution:**
+- Make sure you include the Authorization header
+- Format: `Authorization: Bearer YOUR_ACCESS_TOKEN`
+- Don't forget the word "Bearer" and space before token
+- Verify token hasn't expired (access tokens expire after 60 minutes)
+
+### Issue: "Given token not valid for any token type"
+
+**Solution:**
+```bash
+# Token is expired or invalid
+# Get new tokens by logging in again:
+curl -X POST http://127.0.0.1:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_username", "password": "your_password"}'
+
+# Or refresh with refresh token:
+curl -X POST http://127.0.0.1:8000/api/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh": "YOUR_REFRESH_TOKEN"}'
+```
+
 
 ---
 
-**Last Updated:** September 2025
+**Last Updated:** November 2024
 **Django Version:** 5.2.6
 **PostgreSQL Version:** 16+
+**Authentication:** JWT (djangorestframework-simplejwt)

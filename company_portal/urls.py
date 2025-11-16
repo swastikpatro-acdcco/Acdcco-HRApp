@@ -17,7 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# JWT Token Views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    
+    # People app routes (employee management, user registration, etc.)
     path('', include('people.urls')),
+    
+    # JWT Authentication Endpoints
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),           # Login
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),          # Refresh token
+    path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),    # Logout
 ]

@@ -12,4 +12,5 @@ router.register(r'employees', PersonViewSet)
 urlpatterns = [
     path('', home_view, name='home'),  # This is the new line you're adding
     path('api/', include(router.urls)),
+    path('api/', include('people.auth_urls')),
 ]
