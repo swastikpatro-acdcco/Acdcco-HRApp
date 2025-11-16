@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 
-const Navigation = ({ currentPage, onPageChange = () => {}, isAuthenticated, setIsAuthenticated }) => {
+const Navigation = ({ currentPage, onPageChange = () => {} }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Zustand global auth state
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,10 +53,9 @@ const Navigation = ({ currentPage, onPageChange = () => {}, isAuthenticated, set
     }
   };
 
-  // Logout handler
+  // Logout handler using Zustand
   const handleLogout = () => {
-    localStorage.clear();
-    setIsAuthenticated(false);
+    logout();
     setIsMenuOpen(false);
     navigate("/");
   };

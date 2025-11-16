@@ -9,10 +9,12 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import Dashboard from "./components/Dashboard";
 import LoginPage from "./pages/LoginPage";
+import { useAuthStore } from "./store/authStore";
 import "./App.css";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout); // Zustand logout
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +77,7 @@ function App() {
       <>
         <Navigation
           isAuthenticated={isAuthenticated}
-          setIsAuthenticated={setIsAuthenticated}
+          logout={logout} 
         />
         <Hero />
         <EmployeeDirectory employees={employees} />
@@ -95,12 +97,7 @@ function App() {
         <Route
           path="/"
           element={
-            <LoginPage
-              onLoginSuccess={() => {
-                setIsAuthenticated(true);
-                navigate("/dashboard");
-              }}
-            />
+            <LoginPage/>
           }
         />
 
@@ -124,7 +121,7 @@ function App() {
               <>
                 <Navigation
                   isAuthenticated={isAuthenticated}
-                  setIsAuthenticated={setIsAuthenticated}
+                  logout={logout} 
                 />
                 <Dashboard
                   employees={employees}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMail } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { useAuthStore } from "../store/authStore";
 import "./LoginPage.css";
 
 function LoginPage({ onLoginSuccess }) {
@@ -10,6 +11,8 @@ function LoginPage({ onLoginSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const emailInputRef = useRef(null);
+
+  const login = useAuthStore((state) => state.login);  // Zustand login function
 
   // Auto-focus on email input when page loads
   useEffect(() => {
@@ -21,12 +24,12 @@ function LoginPage({ onLoginSuccess }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Here, later we can integrate API-based authentication 
+    // Later replace with real token from backend
+    const fakeToken = "test-token-123";
 
-    console.log("Mock login with:", { email, password });
-
-    // Simulate successful login
-    if (onLoginSuccess) onLoginSuccess();
+    // Store login info in Zustand
+    login(fakeToken, email);
+    
     navigate("/dashboard");
   };
 
