@@ -1,21 +1,48 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Person
 from .serializers import PersonSerializer
 
 class PersonViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing Person (Employee) records
+    
+    SECURITY: All endpoints require JWT authentication
+    
+    Standard endpoints:
+    - GET    /api/employees/           - List all employees
+    - POST   /api/employees/           - Create new employee
+    - GET    /api/employees/{id}/      - Get employee by ID
+    - PUT    /api/employees/{id}/      - Update employee (full)
+    - PATCH  /api/employees/{id}/      - Update employee (partial)
+    - DELETE /api/employees/{id}/      - Delete employee by ID
+    
+    Custom endpoints:
+    - GET    /api/employees/filter_employees/  - Filter by department/status
+    - DELETE /api/employees/delete_by_identifier/  - Delete by email or name
+    - PATCH  /api/employees/update_by_identifier/  - Update by email or name
+    """
     queryset = Person.objects.all()
     serializer_class = PersonSerializer
+    permission_classes = [IsAuthenticated]  # SECURED: Requires JWT authentication
     
     @action(detail=False, methods=['get'], url_path='filter_employees')
     def by_department(self, request):
         """
         Filter people by department and/or status
-        GET /people/by_department/?department=Engineering
-        GET /people/by_department/?status=active
-        GET /people/by_department/?department=Engineering&status=active
+        
+        SECURITY: Requires authentication (inherits from ViewSet)
+        
+        Examples:
+        GET /api/employees/filter_employees/?department=Engineering
+        GET /api/employees/filter_employees/?status=active
+        GET /api/employees/filter_employees/?department=Engineering&status=active
+        
+        Headers:
+            Authorization: Bearer <access_token>
         """
         department = request.query_params.get('department')
         status_filter = request.query_params.get('status')
@@ -44,8 +71,16 @@ class PersonViewSet(viewsets.ModelViewSet):
     def delete_by_identifier(self, request):
         """
         Delete a person by their ACDC email OR full name
-        DELETE /people/delete_by_identifier/?email=john.smith@acdc.com
-        DELETE /people/delete_by_identifier/?full_name=John Smith
+        
+        SECURITY: Requires authentication (inherits from ViewSet)
+        Note: Later will be restricted to Head HR only via RBAC
+        
+        Examples:
+        DELETE /api/employees/delete_by_identifier/?email=john.smith@acdc.com
+        DELETE /api/employees/delete_by_identifier/?full_name=John Smith
+        
+        Headers:
+            Authorization: Bearer <access_token>
         """
         email = request.query_params.get('email')
         full_name = request.query_params.get('full_name')
@@ -111,9 +146,17 @@ class PersonViewSet(viewsets.ModelViewSet):
     def update_by_identifier(self, request):
         """
         Update a person by their ACDC email OR full name
+        
+        SECURITY: Requires authentication (inherits from ViewSet)
+        Note: Later will be restricted to Head HR and Read-Write via RBAC
+        
+        Examples:
         PATCH /api/employees/update_by_identifier/?email=john.doe@acdc.com
         PATCH /api/employees/update_by_identifier/?full_name=John Doe
         Body: {"department": "Sales", "status": "on_leave"}
+        
+        Headers:
+            Authorization: Bearer <access_token>
         """
         email = request.query_params.get('email')
         full_name = request.query_params.get('full_name')
