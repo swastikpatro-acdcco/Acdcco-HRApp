@@ -26,7 +26,7 @@ export async function createPerson(payload) {
     phone: payload.phone || null,
     subteam: payload.subteam || null,
 
-    // 👇 new fields
+    // new fields
     time_commitment: timeCommitment,
     reports_to: payload.reports_to || "",
   };
@@ -42,4 +42,19 @@ export async function updatePerson(id, payload) {
 
 export async function deletePerson(id) {
   await client.delete(`/people/${id}/`);
+}
+
+// 👇 NEW: get only "Human Resources" people (for the Register page)
+export async function fetchHRPeople() {
+  const { data } = await client.get("/people/human_resources/");
+  return data;
+}
+
+// 👇 NEW: set portal account info for a specific person
+export async function setPortalAccount(id, payload) {
+  const { data } = await client.patch(
+    `/people/${id}/set_portal_account/`,
+    payload
+  );
+  return data;
 }
