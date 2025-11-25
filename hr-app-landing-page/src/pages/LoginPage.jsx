@@ -4,6 +4,7 @@ import { FiMail } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useAuthStore } from "../store/authStore";
 import "./LoginPage.css";
+import axios from "axios";
 
 function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -21,16 +22,24 @@ function LoginPage({ onLoginSuccess }) {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Later replace with real token from backend
-    const fakeToken = "test-token-123";
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/token/", {
+        username: email,
+        password: password,
+      });
 
-    // Store login info in Zustand
-    login(fakeToken, email);
-    
-    navigate("/dashboard");
+      login({
+        access: res.data.access,
+        refresh: res.data.refresh,
+      });
+
+      navigate("/dashboard");
+    } catch (err) {
+      alert("Invalid credentials");
+    }
   };
 
   return (

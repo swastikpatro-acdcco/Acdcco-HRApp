@@ -54,8 +54,8 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
   };
 
   // Logout handler using Zustand
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setIsMenuOpen(false);
     navigate("/");
   };

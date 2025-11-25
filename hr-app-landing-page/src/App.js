@@ -37,7 +37,7 @@ function App() {
 
     const fetchEmployees = async () => {
       try {
-        const res = await client.get("/people/");
+        const res = await client.get("/employees/");
         const data = res.data?.results ?? res.data;
         const normalized = (Array.isArray(data) ? data : data?.results || []).map((p) => ({
           id: p.id,
@@ -75,10 +75,7 @@ function App() {
 
     return (
       <>
-        <Navigation
-          isAuthenticated={isAuthenticated}
-          logout={logout} 
-        />
+        <Navigation />
         <Hero />
         <EmployeeDirectory employees={employees} />
         <EmployeeForm
