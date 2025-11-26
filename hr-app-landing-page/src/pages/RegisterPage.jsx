@@ -1,12 +1,26 @@
+// src/pages/RegisterPage.jsx
 import React, { useEffect, useState } from "react";
 import { fetchHRPeople, setPortalAccount } from "../api/people";
 
 function RegisterRow({ person, onSave, saving }) {
   const [portalEmail, setPortalEmail] = useState(person.portal_email || "");
   const [portalRole, setPortalRole] = useState(person.portal_role || "");
-  const [portalPassword, setPortalPassword] = useState(
-    person.portal_password || ""
-  );
+  const [portalPassword, setPortalPassword] = useState("");
+  const [portalPassword2, setPortalPassword2] = useState("");
+
+  const mismatch = portalPassword && portalPassword2 && portalPassword !== portalPassword2;
+
+  const handleAssign = () => {
+    if (mismatch) {
+      alert("Passwords do not match.");
+      return;
+    }
+    onSave(person.id, {
+      portal_email: portalEmail,
+      portal_role: portalRole,
+      portal_password: portalPassword,
+    });
+  };
 
   return (
     <tr>
@@ -26,25 +40,29 @@ function RegisterRow({ person, onSave, saving }) {
           placeholder="e.g. HR, HR-Assistant"
         />
       </td>
+
+      {/* Password + Confirm IN THE SAME CELL */}
       <td>
-        <input
-          value={portalPassword}
-          onChange={(e) => setPortalPassword(e.target.value)}
-          placeholder="set password"
-          type="password"
-        />
+        <div className="pw-wrap">
+          <input
+            className={`pw ${mismatch ? "pw-err" : ""}`}
+            value={portalPassword}
+            onChange={(e) => setPortalPassword(e.target.value)}
+            placeholder="set password"
+            type="password"
+          />
+          <input
+            className={`pw ${mismatch ? "pw-err" : ""}`}
+            value={portalPassword2}
+            onChange={(e) => setPortalPassword2(e.target.value)}
+            placeholder="retype password"
+            type="password"
+          />
+        </div>
       </td>
+
       <td>
-        <button
-          onClick={() =>
-            onSave(person.id, {
-              portal_email: portalEmail,
-              portal_role: portalRole,
-              portal_password: portalPassword,
-            })
-          }
-          disabled={saving}
-        >
+        <button onClick={handleAssign} disabled={saving}>
           {saving ? "Assigning..." : "Assign"}
         </button>
       </td>
@@ -86,8 +104,8 @@ export default function RegisterPage() {
   return (
     <div
       style={{
-        padding: "120px 1.5rem 2.5rem", // 👈 pushes content below fixed navbar
-        maxWidth: "1100px",
+        padding: "120px 1.5rem 2.5rem",
+        maxWidth: "1280px",          // widened
         margin: "0 auto",
       }}
     >
@@ -116,7 +134,7 @@ export default function RegisterPage() {
                   <th>Department</th>
                   <th>Portal Email</th>
                   <th>Portal Role</th>
-                  <th>Portal Password</th>
+                  <th>Portal Password / Confirm</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -145,6 +163,7 @@ export default function RegisterPage() {
           text-align: left;
           padding: 0.6rem;
           border-bottom: 1px solid #eee;
+          vertical-align: middle;
         }
         .register-table input {
           width: 100%;
@@ -156,13 +175,38 @@ export default function RegisterPage() {
           background: #6d4aff;
           color: #fff;
           border: none;
-          padding: 0.4rem 0.7rem;
+          padding: 0.45rem 0.8rem;
           border-radius: 6px;
           cursor: pointer;
         }
         .register-table button[disabled] {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+
+        /* New layout for side-by-side password + confirm */
+        .pw-wrap {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .pw-wrap .pw {
+          width: 50%;
+        }
+        .pw-err {
+          border-color: #e65a5a !important;
+          box-shadow: 0 0 0 2px rgba(230, 90, 90, 0.1);
+        }
+
+        /* On small screens, stack them nicely */
+        @media (max-width: 700px) {
+          .pw-wrap {
+            flex-direction: column;
+            gap: 6px;
+          }
+          .pw-wrap .pw {
+            width: 100%;
+          }
         }
       `}</style>
     </div>
