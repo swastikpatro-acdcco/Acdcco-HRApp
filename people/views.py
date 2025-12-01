@@ -5,36 +5,78 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Person
 from .serializers import PersonSerializer
+from .permissions import IsReadOnlyOrAbove, IsReadWriteOrAbove, IsFullAccessUser
+
 
 class PersonViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing Person (Employee) records
     
-    SECURITY: All endpoints require JWT authentication
+    SECURITY: Role-Based Access Control (RBAC) enforced
+    
+    Permission Levels:
+    - READ (GET):    HR_ReadOnly, HR_ReadWrite, HR_FullAccess, Superuser
+    - WRITE (POST/PATCH): HR_ReadWrite, HR_FullAccess, Superuser  
+    - DELETE:        HR_FullAccess, Superuser ONLY
     
     Standard endpoints:
-    - GET    /api/employees/           - List all employees
-    - POST   /api/employees/           - Create new employee
-    - GET    /api/employees/{id}/      - Get employee by ID
-    - PUT    /api/employees/{id}/      - Update employee (full)
-    - PATCH  /api/employees/{id}/      - Update employee (partial)
-    - DELETE /api/employees/{id}/      - Delete employee by ID
+    - GET    /api/employees/           - List all employees (READ permission)
+    - POST   /api/employees/           - Create new employee (WRITE permission)
+    - GET    /api/employees/{id}/      - Get employee by ID (READ permission)
+    - PUT    /api/employees/{id}/      - Update employee full (WRITE permission)
+    - PATCH  /api/employees/{id}/      - Update employee partial (WRITE permission)
+    - DELETE /api/employees/{id}/      - Delete employee by ID (DELETE permission)
     
     Custom endpoints:
-    - GET    /api/employees/filter_employees/  - Filter by department/status
-    - DELETE /api/employees/delete_by_identifier/  - Delete by email or name
-    - PATCH  /api/employees/update_by_identifier/  - Update by email or name
+    - GET    /api/employees/filter_employees/      - Filter by department/status (READ)
+    - DELETE /api/employees/delete_by_identifier/  - Delete by email or name (DELETE)
+    - PATCH  /api/employees/update_by_identifier/  - Update by email or name (WRITE)
     """
     queryset = Person.objects.all()
     serializer_class = PersonSerializer
-    permission_classes = [IsAuthenticated]  # SECURED: Requires JWT authentication
+    
+    # Default permission (fallback)
+    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Instantiate and return the list of permissions that this view requires.
+        
+        This method is called for each request to determine which permission
+        classes should be used based on the action being performed.
+        
+        Permission Mapping:
+        - list, retrieve, filter_employees → IsReadOnlyOrAbove (any HR role)
+        - create → IsReadWriteOrAbove (ReadWrite and FullAccess only)
+        - update, partial_update, update_by_identifier → IsReadWriteOrAbove
+        - destroy, delete_by_identifier → IsFullAccessUser (FullAccess only)
+        """
+        
+        # READ operations - Any HR role can view
+        if self.action in ['list', 'retrieve', 'by_department']:
+            permission_classes = [IsReadOnlyOrAbove]
+        
+        # WRITE operations - ReadWrite and FullAccess can create/update
+        elif self.action in ['create', 'update', 'partial_update', 'update_by_identifier']:
+            permission_classes = [IsReadWriteOrAbove]
+        
+        # DELETE operations - Only FullAccess can delete
+        elif self.action in ['destroy', 'delete_by_identifier']:
+            permission_classes = [IsFullAccessUser]
+        
+        # Default fallback - require authentication
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
     
     @action(detail=False, methods=['get'], url_path='filter_employees')
     def by_department(self, request):
         """
         Filter people by department and/or status
         
-        SECURITY: Requires authentication (inherits from ViewSet)
+        SECURITY: Requires READ permission (IsReadOnlyOrAbove)
+        Allowed roles: HR_ReadOnly, HR_ReadWrite, HR_FullAccess, Superuser
         
         Examples:
         GET /api/employees/filter_employees/?department=Engineering
@@ -43,6 +85,12 @@ class PersonViewSet(viewsets.ModelViewSet):
         
         Headers:
             Authorization: Bearer <access_token>
+        
+        Response codes:
+            200 - Success
+            400 - Missing required filters
+            401 - Not authenticated
+            403 - Insufficient permissions (not in any HR role)
         """
         department = request.query_params.get('department')
         status_filter = request.query_params.get('status')
@@ -57,7 +105,7 @@ class PersonViewSet(viewsets.ModelViewSet):
         if status_filter:
             employees = employees.filter(status=status_filter)
         
-        # If no filters provided, return empty or all based on your preference
+        # If no filters provided, return error
         if not department and not status_filter:
             return Response(
                 {"error": "Please provide at least one filter: department or status"},
@@ -72,8 +120,9 @@ class PersonViewSet(viewsets.ModelViewSet):
         """
         Delete a person by their ACDC email OR full name
         
-        SECURITY: Requires authentication (inherits from ViewSet)
-        Note: Later will be restricted to Head HR only via RBAC
+        SECURITY: Requires DELETE permission (IsFullAccessUser)
+        Allowed roles: HR_FullAccess, Superuser ONLY
+        Denied roles: HR_ReadOnly, HR_ReadWrite
         
         Examples:
         DELETE /api/employees/delete_by_identifier/?email=john.smith@acdc.com
@@ -81,6 +130,14 @@ class PersonViewSet(viewsets.ModelViewSet):
         
         Headers:
             Authorization: Bearer <access_token>
+        
+        Response codes:
+            200 - Success
+            400 - Missing required parameters
+            401 - Not authenticated
+            403 - Insufficient permissions (not HR_FullAccess)
+            404 - Employee not found
+            409 - Multiple employees found (use email instead)
         """
         email = request.query_params.get('email')
         full_name = request.query_params.get('full_name')
@@ -94,9 +151,13 @@ class PersonViewSet(viewsets.ModelViewSet):
         # Prefer email if both are provided (more reliable identifier)
         if email:
             person = get_object_or_404(Person, acdc_email__iexact=email)
+            deleted_name = person.full_name
             person.delete()
             return Response(
-                {"message": f"Employee with email {email} deleted successfully"},
+                {
+                    "message": f"Employee {deleted_name} with email {email} deleted successfully",
+                    "deleted_by": request.user.username
+                },
                 status=status.HTTP_200_OK
             )
         
@@ -137,7 +198,10 @@ class PersonViewSet(viewsets.ModelViewSet):
             person.delete()
             
             return Response(
-                {"message": f"Employee {deleted_name} ({deleted_email}) deleted successfully"},
+                {
+                    "message": f"Employee {deleted_name} ({deleted_email}) deleted successfully",
+                    "deleted_by": request.user.username
+                },
                 status=status.HTTP_200_OK
             )
         
@@ -147,8 +211,9 @@ class PersonViewSet(viewsets.ModelViewSet):
         """
         Update a person by their ACDC email OR full name
         
-        SECURITY: Requires authentication (inherits from ViewSet)
-        Note: Later will be restricted to Head HR and Read-Write via RBAC
+        SECURITY: Requires WRITE permission (IsReadWriteOrAbove)
+        Allowed roles: HR_ReadWrite, HR_FullAccess, Superuser
+        Denied roles: HR_ReadOnly (can only view)
         
         Examples:
         PATCH /api/employees/update_by_identifier/?email=john.doe@acdc.com
@@ -157,6 +222,14 @@ class PersonViewSet(viewsets.ModelViewSet):
         
         Headers:
             Authorization: Bearer <access_token>
+        
+        Response codes:
+            200 - Success
+            400 - Missing required parameters or validation error
+            401 - Not authenticated
+            403 - Insufficient permissions (HR_ReadOnly cannot update)
+            404 - Employee not found
+            409 - Multiple employees found (use email instead)
         """
         email = request.query_params.get('email')
         full_name = request.query_params.get('full_name')
@@ -177,6 +250,7 @@ class PersonViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response({
                     "message": f"Employee {email} updated successfully",
+                    "updated_by": request.user.username,
                     "updated_data": serializer.data
                 })
             
@@ -217,6 +291,7 @@ class PersonViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response({
                     "message": f"Employee {full_name} updated successfully",
+                    "updated_by": request.user.username,
                     "updated_data": serializer.data
                 })
             
