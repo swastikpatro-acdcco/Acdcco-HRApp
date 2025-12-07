@@ -20,26 +20,18 @@ function App() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Update & Delete handlers for Dashboard
-  const updateEmployee = (oldName, updatedEmployee) => {
-    setEmployees((prev) =>
-      prev.map((emp) => (emp.name === oldName ? updatedEmployee : emp))
-    );
-  };
-
-  const deleteEmployee = (employeeName) => {
-    setEmployees((prev) => prev.filter((emp) => emp.name !== employeeName));
-  };
-
   // Fetch backend data only if logged in
   useEffect(() => {
     if (!isAuthenticated) return;
-
+    let isMounted = true;
     const fetchEmployees = async () => {
       try {
         const res = await client.get("/employees/");
         const data = res.data?.results ?? res.data;
-        const normalized = (Array.isArray(data) ? data : data?.results || []).map((p) => ({
+
+        if (isMounted) {
+        const normalized = (Array.isArray(data) ? data : data?.results || []).map(
+          (p) => ({
           id: p.id,
           name: p.full_name || "",
           title: p.position || "",
@@ -52,35 +44,43 @@ function App() {
               : p.status || "Inactive",
           startDate: p.start_date || "",
           location: p.timezone || "",
+          reportsTo: p.reports_to || "",
           acdc_email: p.acdc_email || "",
           personal_email: p.personal_email || "",
           phone: p.phone || "",
-        }));
-        setEmployees(normalized);
-      } catch (err) {
-        console.error("Error loading employees:", err);
-        setError("Failed to load employees");
+        })
+      );
+      setEmployees(normalized);
+     }
+    } catch (e) {
+        console.error("Error loading employees:", e);
+        if (isMounted) setError("Failed to load employees");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchEmployees();
+    return () => { isMounted = false; };
   }, [isAuthenticated]);
 
+  const addEmployee = (newEmployee) => setEmployees((prev) => [...prev, newEmployee]);
+  const updateEmployee = (oldName, updated) =>
+    setEmployees((prev) => prev.map((emp) => (emp.name === oldName ? updated : emp)));
+  const deleteEmployee = (name) =>
+    setEmployees((prev) => prev.filter((emp) => emp.name !== name));
+
   //  Dashboard + Home Content
-  const DashboardContent = () => {
+  const renderPage = () => {
     if (loading) return <p>Loading employees...</p>;
     if (error) return <p style={{ color: "red" }}>{error}</p>;
 
     return (
       <>
-        <Navigation />
+        <Navigation isAuthenticated={isAuthenticated} logout={logout} />
         <Hero />
         <EmployeeDirectory employees={employees} />
-        <EmployeeForm
-          onAddEmployee={(newEmp) => setEmployees([...employees, newEmp])}
-        />
+        <EmployeeForm onAddEmployee={addEmployee} />
         <Contact />
         <Footer />
       </>
@@ -103,7 +103,7 @@ function App() {
           path="/dashboard"
           element={
             isAuthenticated ? (
-              <DashboardContent />
+              renderPage()
             ) : (
               <Navigate to="/" replace />
             )

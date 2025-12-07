@@ -1,25 +1,30 @@
 import axios from "axios";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/authStore"; 
+
+const base = process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000";
 
 const client = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: `${base}/api`,
+  timeout: 15000,
 });
 
+// Attach access token to every request
 client.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
+// Handle token refresh
 client.interceptors.response.use(
   (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
 
+    // If unauthorized → try refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -27,7 +32,7 @@ client.interceptors.response.use(
         const refreshToken = useAuthStore.getState().refreshToken;
 
         const res = await axios.post(
-          "http://127.0.0.1:8000/api/token/refresh/",
+          `${base}/api/token/refresh/`,
           { refresh: refreshToken }
         );
 

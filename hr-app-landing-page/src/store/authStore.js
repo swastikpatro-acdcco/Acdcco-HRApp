@@ -9,6 +9,9 @@ export const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
 
+      setAccessToken: (token) => set({ accessToken: token }),
+      setRefreshToken: (token) => set({ refreshToken: token }),
+
       // LOGIN — Save Tokens in Store
       login: ({ access, refresh }) =>
         set({
