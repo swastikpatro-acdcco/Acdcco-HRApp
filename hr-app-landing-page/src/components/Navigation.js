@@ -27,10 +27,7 @@ const Navigation = ({ currentPage, onPageChange = () => {} }) => {
       if (el) {
         const NAV_OFFSET = 88;
         const y = el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
-        window.scrollTo({ 
-          top: y, 
-          behavior: 'smooth' 
-        });
+        window.scrollTo({ top: y, behavior: 'smooth' });
         setIsMenuOpen(false);
       } else if (attempt < 6) {
         requestAnimationFrame(() => tryScroll(attempt + 1));

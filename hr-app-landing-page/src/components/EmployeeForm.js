@@ -17,7 +17,6 @@ const INITIAL_DEPARTMENTS = [
 // Backend-allowed choices for position
 const POSITION_CHOICES = [
   "Volunteer",
-  "Manager",
   "Asst. Director",
   "Director",
 ];
