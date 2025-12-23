@@ -31,15 +31,15 @@ export async function createPerson(payload) {
     reports_to: payload.reports_to || "",
   };
 
-  const { data } = await client.post("/people/", body);
+  const { data } = await client.post("/employees/", body);
   return data; // returns the created Person from backend
 }
 
 export async function updatePerson(id, payload) {
-  const { data } = await client.patch(`/people/${id}/`, payload);
+  const { data } = await client.patch(`/employees/${id}/`, payload);
   return data;
 }
 
 export async function deletePerson(id) {
-  await client.delete(`/people/${id}/`);
+  await client.delete(`/employees/${id}/`);
 }

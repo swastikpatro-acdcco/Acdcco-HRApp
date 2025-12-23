@@ -3,17 +3,14 @@ from django.http import HttpResponse
 from rest_framework.routers import DefaultRouter
 from .views import PersonViewSet
 
-# Simple home route for quick check
 def home_view(request):
-    return HttpResponse(
-        "<h1>People App</h1><p><a href='/admin/'>Admin</a> | <a href='/api/people/'>API</a></p>"
-    )
+    return HttpResponse("<h1>People App</h1><p><a href='/admin/'>Admin</a> | <a href='/api/employees/'>API</a></p>")
 
-# Register REST endpoints
 router = DefaultRouter()
-router.register(r"people", PersonViewSet, basename="people")
+router.register(r'employees', PersonViewSet)
 
 urlpatterns = [
-    path("", home_view, name="home"),
-    path("", include(router.urls)),
+    path('', home_view, name='home'),  # This is the new line you're adding
+    path('api/', include(router.urls)),
+    path('api/', include('people.auth_urls')),
 ]
