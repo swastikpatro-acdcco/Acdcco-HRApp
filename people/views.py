@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from .models import Person
 from .serializers import PersonSerializer
 
-
 class PersonViewSet(viewsets.ModelViewSet):
     """
     Default CRUD:
@@ -19,21 +18,11 @@ class PersonViewSet(viewsets.ModelViewSet):
       GET    /api/people/filter_employees/
       PATCH  /api/people/update_by_identifier/
       DELETE /api/people/delete_by_identifier/
-      GET    /api/people/human_resources/
-      PATCH  /api/people/<id>/set_portal_account/
     """
     queryset = Person.objects.all().order_by("-created_at")
     serializer_class = PersonSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = [
-        "full_name",
-        "department",
-        "subteam",
-        "position",
-        "status",
-        "acdc_email",
-        "personal_email",
-    ]
+    search_fields = ["full_name", "department", "subteam", "position", "status", "acdc_email", "personal_email"]
     ordering_fields = ["full_name", "start_date", "department", "position", "created_at"]
 
     # ---------------------------------------------------------------------
@@ -182,34 +171,3 @@ class PersonViewSet(viewsets.ModelViewSet):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # ---------------------------------------------------------------------
-    # NEW: list only Human Resources people
-    # ---------------------------------------------------------------------
-    @action(detail=False, methods=["get"], url_path="human_resources")
-    def human_resources(self, request):
-        queryset = Person.objects.filter(department__iexact="Human Resources")
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    # ---------------------------------------------------------------------
-    # NEW: set portal account for a specific person
-    # ---------------------------------------------------------------------
-    @action(detail=True, methods=["patch"], url_path="set_portal_account")
-    def set_portal_account(self, request, pk=None):
-        person = self.get_object()
-
-        portal_email = request.data.get("portal_email")
-        portal_password = request.data.get("portal_password")
-        portal_role = request.data.get("portal_role")
-
-        if portal_email is not None:
-            person.portal_email = portal_email
-        if portal_password is not None:
-            person.portal_password = portal_password
-        if portal_role is not None:
-            person.portal_role = portal_role
-
-        person.save()
-        serializer = self.get_serializer(person)
-        return Response(serializer.data, status=status.HTTP_200_OK)

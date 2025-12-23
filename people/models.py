@@ -37,7 +37,7 @@ class Person(models.Model):
     # position now matches the frontend list
     position = models.TextField(choices=POSITION_CHOICES, blank=True, null=True, help_text="Position/Role")
 
-    # store the “Reports To” name coming from the React form
+    # 👇 NEW: store the “Reports To” name coming from the React form
     reports_to = models.TextField(blank=True, null=True, help_text="Manager / Supervisor this person reports to")
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active", help_text="Member status")
@@ -46,12 +46,6 @@ class Person(models.Model):
 
     # 1–50 hours/week like the UI
     time_commitment = models.SmallIntegerField(blank=True, null=True, help_text="Time commitment in hours (1-50)")
-
-    # --- NEW: portal account fields Jenny can set from the Register page ---
-    portal_email = models.TextField(blank=True, null=True, help_text="Login email for HR portal")
-    portal_role = models.CharField(max_length=50, blank=True, null=True, help_text="Role in HR portal")
-    portal_password = models.TextField(blank=True, null=True, help_text="TEMPORARY: plain password set by HR")
-    # ------------------------------------------------------------------------
 
     start_date = models.DateField(help_text="Start date (required)")
     end_date = models.DateField(blank=True, null=True, help_text="End date")
